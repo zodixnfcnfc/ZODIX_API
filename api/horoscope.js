@@ -1,37 +1,54 @@
+import { google } from "googleapis";
+
 export default async function handler(req, res) {
 
-  // Permitir llamadas desde Shopify
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   try {
 
     const { uid } = req.query;
 
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0/gviz/tq?tqx=out:json";
+    const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
 
-    const sheet = await fetch(sheetUrl);
-    const text = await sheet.text();
+    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
 
-    const json = JSON.parse(text.substring(47).slice(0, -2));
-    const rows = json.table.rows;
+    const auth = new google.auth.JWT(
+      credentials.client_email,
+      null,
+      credentials.private_key,
+      ["https://www.googleapis.com/auth/spreadsheets"]
+    );
 
+    const sheets = google.sheets({ version: "v4", auth });
+
+    const sheetData = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: "A:N"
+    });
+
+    const rows = sheetData.data.values;
+
+    let rowIndex = -1;
     let person = null;
 
-    for (let r of rows) {
+    for (let i = 1; i < rows.length; i++) {
 
-      const orderId = r.c[0]?.v || "";
+      const orderId = rows[i][0] || "";
 
       if (orderId.includes(uid)) {
 
+        rowIndex = i + 1;
+
         person = {
-          name: r.c[4]?.v || "",
-          sun: r.c[8]?.v || "",
-          moon: r.c[9]?.v || "",
-          rising: r.c[10]?.v || ""
+          name: rows[i][4] || "",
+          sun: rows[i][8] || "",
+          moon: rows[i][9] || "",
+          rising: rows[i][10] || "",
+          message_daily: rows[i][12] || "",
+          message_date: rows[i][13] || ""
         };
 
+        break;
       }
     }
 
@@ -44,6 +61,18 @@ export default async function handler(req, res) {
       month: "long",
       year: "numeric"
     });
+
+    const todayKey = new Date().toISOString().split("T")[0];
+
+    if (person.message_date === todayKey && person.message_daily) {
+
+      return res.status(200).json({
+        choices: [
+          { message: { content: person.message_daily } }
+        ]
+      });
+
+    }
 
     const prompt = `
 Escribe un horóscopo diario personalizado en español.
@@ -83,7 +112,22 @@ Hoy es ${today}.
 
     const data = await response.json();
 
-    res.status(200).json(data);
+    const message = data.choices[0].message.content;
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: sheetId,
+      range: `M${rowIndex}:N${rowIndex}`,
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [[message, todayKey]]
+      }
+    });
+
+    res.status(200).json({
+      choices: [
+        { message: { content: message } }
+      ]
+    });
 
   } catch (error) {
 
