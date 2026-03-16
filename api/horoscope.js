@@ -77,25 +77,27 @@ export default async function handler(req, res) {
     const prompt = `
 Escribe un horóscopo diario personalizado en español.
 
-Empieza siempre con: "Hola ${person.name},"
+El texto debe empezar EXACTAMENTE así:
+
+Hola ${person.name},
+
+Hoy, ${today}
+
+Después de la fecha continúa el texto del horóscopo en la misma frase.
 
 Ten en cuenta la carta astral de esta persona:
 
-Sun sign: ${person.sun}
-Moon sign: ${person.moon}
-Rising sign: ${person.rising}
-
-Debe sonar como una interpretación astrológica real basada en su carta astral.
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
 
 Reglas:
 - máximo 4 frases
 - tono místico pero moderno
 - positivo e inspirador
 - fácil de leer
-- separa el mensaje en 2 o 3 párrafos
-- deja una línea en blanco entre párrafos
-
-Hoy es ${today}.
+- natural, no genérico
+- evita frases típicas de horóscopo
 `;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
