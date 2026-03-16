@@ -1,5 +1,10 @@
 export default async function handler(req, res) {
 
+  // Permitir llamadas desde Shopify
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
   try {
 
     const { uid } = req.query;
@@ -51,7 +56,7 @@ Sun sign: ${person.sun}
 Moon sign: ${person.moon}
 Rising sign: ${person.rising}
 
-Debe sonar como una interpretación astrológica real.
+Debe sonar como una interpretación astrológica real basada en su carta astral.
 
 Reglas:
 - máximo 4 frases
@@ -59,6 +64,7 @@ Reglas:
 - positivo e inspirador
 - fácil de leer
 - separa el mensaje en 2 o 3 párrafos
+- deja una línea en blanco entre párrafos
 
 Hoy es ${today}.
 `;
