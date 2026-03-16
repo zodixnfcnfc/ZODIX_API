@@ -81,23 +81,11 @@ El texto debe empezar EXACTAMENTE así:
 
 Hola ${person.name},
 
-Hoy, ${today}
+Hoy, ${today} ...
 
 Después continúa el horóscopo.
 
-Estructura obligatoria del texto:
-
-Hola ${person.name},
-
-Hoy, ${today} comienza el horóscopo.
-
-(blank line)
-
-Primer párrafo del horóscopo.
-
-(blank line)
-
-Segundo párrafo del horóscopo.
+Debe escribirse en DOS párrafos separados por una línea en blanco.
 
 Ten en cuenta la carta astral de esta persona:
 
@@ -110,7 +98,7 @@ Reglas:
 - tono místico pero moderno
 - positivo e inspirador
 - fácil de leer
-- escribe SIEMPRE en 2 párrafos
+- siempre en 2 párrafos
 - deja una línea en blanco entre párrafos
 `;
 
@@ -118,7 +106,7 @@ Reglas:
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": \`Bearer \${process.env.OPENAI_API_KEY}\`
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
         model: "gpt-4.1-mini",
@@ -132,7 +120,7 @@ Reglas:
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: \`M\${rowIndex}:N\${rowIndex}\`,
+      range: `M${rowIndex}:N${rowIndex}`,
       valueInputOption: "RAW",
       requestBody: {
         values: [[message, todayKey]]
