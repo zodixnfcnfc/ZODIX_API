@@ -77,20 +77,42 @@ export default async function handler(req, res) {
         });
       }
 
+      const todayFormatted = new Date().toLocaleDateString("es-ES", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      });
+
       const prompt = `
+Eres un astrólogo místico premium de una marca de lujo llamada ZODIX.
+
+Tu estilo es:
+poético, elegante, breve, misterioso, emocional.
+
+REGLAS OBLIGATORIAS:
+- Máximo 6-7 líneas
+- Una frase por línea
+- Frases cortas
+- NO listas
+- NO explicaciones
+- NO hablar de “tu Sol en…” ni describir signos
+- NO hacer preguntas
+- NO parecer ChatGPT
+- SOLO tono místico tipo profecía
+- Máximo 2 emojis (✨🔥)
+
+FORMATO EXACTO:
+
 Hola ${person.name},
 
-✨ Hoy hay una energía importante para ti
+Hoy, ${todayFormatted}
 
-Actúa con claridad  
-Confía en tu intuición  
-No ignores señales  
+[frases poéticas línea a línea]
 
-Tu Sol en ${person.sun} marca el impulso  
-Tu Luna en ${person.moon} guía tus emociones  
-Tu Ascendente en ${person.rising} define tu camino  
-
-🔥 Hoy puede marcar un antes y un después
+DATOS:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
 `;
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
