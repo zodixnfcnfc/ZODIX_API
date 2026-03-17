@@ -1,4 +1,4 @@
-import { goimport { google } from "googleapis";
+import { google } from "googleapis";
 
 export default async function handler(req, res) {
 
@@ -66,15 +66,9 @@ export default async function handler(req, res) {
       return res.status(200).json(person);
     }
 
-    const todayFormatted = new Date().toLocaleDateString("es-ES", {
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    });
-
     const today = new Date().toISOString().split("T")[0];
 
-    /* ⚡ ENERGÍA (MEJORADO PERO SEGURO) */
+    /* ⚡ ENERGÍA */
 
     if (type !== "affinity") {
 
@@ -85,43 +79,19 @@ export default async function handler(req, res) {
       }
 
       const prompt = `
-Escribe un horóscopo diario PREMIUM en español.
-
-FORMATO EXACTO (NO ROMPER):
-
 Hola ${person.name},
 
-Hoy, ${todayFormatted}
+✨ Hoy hay una energía importante para ti
 
-✨ [Frase potente]
+Actúa con claridad  
+Confía en tu intuición  
+No ignores señales  
 
-[Frase corta]
+Tu Sol en ${person.sun} marca el impulso  
+Tu Luna en ${person.moon} guía tus emociones  
+Tu Ascendente en ${person.rising} define tu camino  
 
-[Frase corta]
-
-[Frase conectando Sol, Luna y Ascendente]
-
-[Frase emocional]
-
-🔥 [Frase final contundente]
-
-REGLAS:
-- Cada línea separada (IMPORTANTE)
-- No párrafos
-- Máx 6 frases (sin saludo)
-- Máx 12 palabras por línea
-- Estilo claro y directo
-
-ESTILO:
-- Místico moderno
-- Impactante
-- Nada genérico
-- Nada explicativo largo
-
-DATOS:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
+🔥 Hoy puede marcar un antes y un después
 `;
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -153,7 +123,7 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD (NO TOCAR) */
+    /* 💫 AFINIDAD */
 
     if (type === "affinity") {
 
