@@ -66,18 +66,12 @@ export default async function handler(req, res) {
       return res.status(200).json(person);
     }
 
-    const today = new Date().toLocaleDateString("es-ES", {
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    });
-
-    const todayKey = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
 
     /* ⚡ ENERGÍA */
     if (type !== "affinity") {
 
-      if (person.message_date === todayKey && person.message_daily) {
+      if (person.message_date === today && person.message_daily) {
         return res.status(200).json({
           choices: [{ message: { content: person.message_daily } }]
         });
@@ -86,18 +80,17 @@ export default async function handler(req, res) {
       const prompt = `
 Hola ${person.name},
 
-Hoy, ${today}
+✨ Hoy hay una energía importante para ti
 
-✨ Frase potente
+Actúa con claridad  
+Confía en tu intuición  
+No ignores señales  
 
-Frases cortas conectando energía, emoción y acción
+Tu Sol en ${person.sun} marca el impulso  
+Tu Luna en ${person.moon} guía tus emociones  
+Tu Ascendente en ${person.rising} define tu camino  
 
-🔥 Cierre impactante
-
-Datos:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
+🔥 Hoy puede marcar un antes y un después
 `;
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -120,7 +113,7 @@ Ascendente: ${person.rising}
         range: `M${rowIndex}:N${rowIndex}`,
         valueInputOption: "RAW",
         requestBody: {
-          values: [[message, todayKey]]
+          values: [[message, today]]
         }
       });
 
@@ -133,7 +126,7 @@ Ascendente: ${person.rising}
 
     if (type === "affinity") {
 
-      if (person.affinity_date === todayKey && person.affinity_daily) {
+      if (person.affinity_date === today && person.affinity_daily) {
         return res.status(200).json({
           choices: [{ message: { content: person.affinity_daily } }]
         });
@@ -142,22 +135,27 @@ Ascendente: ${person.rising}
       const prompt = `
 Escribe una afinidad astral diaria PREMIUM.
 
-FORMATO:
-- Frases cortas
-- Máx 6 líneas
-- Cada línea separada
-- Fácil de leer en móvil
+FORMATO OBLIGATORIO:
 
-CONTENIDO:
-- 2-3 signos con alta conexión
-- 1 signo a evitar
-- Explicar por qué (emocional, energía, atracción)
-- Añadir un consejo final potente
+Hoy conectas especialmente con:
 
-ESTILO:
-- Místico moderno
-- Seductor
-- Directo
+🔥 [Signo] → [conexión emocional breve]
+
+💫 [Signo] → [tipo de conexión]
+
+⚡ [Signo] → [sensación o energía]
+
+⚠️ Evita hoy:
+
+[Signo] → [por qué evitarlo]
+
+💡 Consejo:
+[frase final potente]
+
+REGLAS:
+- Cada frase en una línea
+- Máx 10 palabras por línea
+- No párrafos
 
 DATOS:
 Sol: ${person.sun}
@@ -185,7 +183,7 @@ Ascendente: ${person.rising}
         range: `O${rowIndex}:P${rowIndex}`,
         valueInputOption: "RAW",
         requestBody: {
-          values: [[message, todayKey]]
+          values: [[message, today]]
         }
       });
 
