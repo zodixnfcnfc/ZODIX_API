@@ -68,7 +68,13 @@ export default async function handler(req, res) {
 
     const today = new Date().toISOString().split("T")[0];
 
-    /* ⚡ ENERGÍA */
+    const todayFormatted = new Date().toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+
+    /* ⚡ ENERGÍA (PROMPT NUEVO BUENO) */
 
     if (type !== "affinity") {
 
@@ -79,19 +85,48 @@ export default async function handler(req, res) {
       }
 
       const prompt = `
+Escribe un horóscopo diario PREMIUM en español.
+
+FORMATO OBLIGATORIO (ESTRICTO):
+
 Hola ${person.name},
 
-✨ Hoy hay una energía importante para ti
+Hoy, ${todayFormatted}
 
-Actúa con claridad  
-Confía en tu intuición  
-No ignores señales  
+✨ [Frase de impacto muy potente]
 
-Tu Sol en ${person.sun} marca el impulso  
-Tu Luna en ${person.moon} guía tus emociones  
-Tu Ascendente en ${person.rising} define tu camino  
+[Frase corta]
 
-🔥 Hoy puede marcar un antes y un después
+[Frase corta]
+
+[Frase que conecte Sol, Luna y Ascendente]
+
+[Frase emocional breve]
+
+🔥 [Frase final muy potente]
+
+REGLAS:
+- Cada frase en una línea separada
+- NO párrafos
+- Máximo 6 frases (sin saludo)
+- Máximo 10-12 palabras por línea
+- Nada explicativo largo
+- Nada genérico
+- Debe sonar potente y personal
+
+ESTILO:
+- Místico moderno
+- Directo
+- Energía alta
+- Sensación de poder
+
+IMPORTANTE:
+Debe parecer una lectura exclusiva, no genérica.
+
+DATOS:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
 `;
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -123,7 +158,7 @@ Tu Ascendente en ${person.rising} define tu camino
       });
     }
 
-    /* 💫 AFINIDAD */
+    /* 💫 AFINIDAD (NO TOCADO) */
 
     if (type === "affinity") {
 
