@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
     const sheetData = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "A:N"
+      range: "A:P"
     });
 
     const rows = sheetData.data.values;
@@ -48,7 +48,9 @@ export default async function handler(req, res) {
           moon: rows[i][9] || "",
           rising: rows[i][10] || "",
           message_daily: rows[i][12] || "",
-          message_date: rows[i][13] || ""
+          message_date: rows[i][13] || "",
+          affinity_daily: rows[i][14] || "",
+          affinity_date: rows[i][15] || ""
         };
 
         break;
@@ -59,12 +61,10 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Person not found" });
     }
 
-    /* 🔮 PERFIL ASTRAL */
+    /* 🔮 PERFIL */
     if (type === "profile") {
       return res.status(200).json(person);
     }
-
-    /* ⚡ ENERGÍA DE HOY */
 
     const today = new Date().toLocaleDateString("es-ES", {
       day: "numeric",
@@ -74,47 +74,90 @@ export default async function handler(req, res) {
 
     const todayKey = new Date().toISOString().split("T")[0];
 
-    if (person.message_date === todayKey && person.message_daily) {
+    /* ⚡ ENERGÍA */
+    if (type !== "affinity") {
 
-      return res.status(200).json({
-        choices: [
-          { message: { content: person.message_daily } }
-        ]
-      });
+      if (person.message_date === todayKey && person.message_daily) {
+        return res.status(200).json({
+          choices: [{ message: { content: person.message_daily } }]
+        });
+      }
 
-    }
-
-    const prompt = `
-Escribe un horóscopo diario PREMIUM en español, diseñado para leerse en móvil.
-
-FORMATO OBLIGATORIO (ESTRICTO):
-
+      const prompt = `
 Hola ${person.name},
 
 Hoy, ${today}
 
-✨ [Frase de impacto muy corta]
+✨ Frase potente
 
-[Frase corta]
+Frases cortas conectando energía, emoción y acción
 
-[Frase corta]
+🔥 Cierre impactante
 
-[Frase conectando Sol, Luna y Ascendente]
+Datos:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
+`;
 
-[Frase emocional breve]
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
 
-🔥 [Frase final muy potente]
+      const data = await response.json();
+      const message = data.choices[0].message.content;
 
-REGLAS CRÍTICAS:
-- Cada frase en línea separada
-- Máx 6 frases (sin saludo)
-- Máx 12-15 palabras por línea
-- Nada de párrafos
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `M${rowIndex}:N${rowIndex}`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [[message, todayKey]]
+        }
+      });
+
+      return res.status(200).json({
+        choices: [{ message: { content: message } }]
+      });
+    }
+
+    /* 💫 AFINIDAD PRO */
+
+    if (type === "affinity") {
+
+      if (person.affinity_date === todayKey && person.affinity_daily) {
+        return res.status(200).json({
+          choices: [{ message: { content: person.affinity_daily } }]
+        });
+      }
+
+      const prompt = `
+Escribe una afinidad astral diaria PREMIUM.
+
+FORMATO:
+- Frases cortas
+- Máx 6 líneas
+- Cada línea separada
+- Fácil de leer en móvil
+
+CONTENIDO:
+- 2-3 signos con alta conexión
+- 1 signo a evitar
+- Explicar por qué (emocional, energía, atracción)
+- Añadir un consejo final potente
 
 ESTILO:
 - Místico moderno
+- Seductor
 - Directo
-- Premium
 
 DATOS:
 Sol: ${person.sun}
@@ -122,36 +165,34 @@ Luna: ${person.moon}
 Ascendente: ${person.rising}
 `;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4.1-mini",
-        messages: [{ role: "user", content: prompt }]
-      })
-    });
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
 
-    const data = await response.json();
+      const data = await response.json();
+      const message = data.choices[0].message.content;
 
-    const message = data.choices[0].message.content;
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `O${rowIndex}:P${rowIndex}`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [[message, todayKey]]
+        }
+      });
 
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: sheetId,
-      range: `M${rowIndex}:N${rowIndex}`,
-      valueInputOption: "RAW",
-      requestBody: {
-        values: [[message, todayKey]]
-      }
-    });
-
-    res.status(200).json({
-      choices: [
-        { message: { content: message } }
-      ]
-    });
+      return res.status(200).json({
+        choices: [{ message: { content: message } }]
+      });
+    }
 
   } catch (error) {
 
