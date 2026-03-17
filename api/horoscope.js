@@ -77,49 +77,36 @@ export default async function handler(req, res) {
     const prompt = `
 Escribe un horóscopo diario personalizado en español.
 
-ESTRUCTURA OBLIGATORIA:
+El texto debe empezar EXACTAMENTE así:
 
-1. Primera línea:
 Hola ${person.name},
 
-2. Segunda línea (HOOK potente, 1 frase corta que enganche):
-Ejemplo: "Hoy no es un día cualquiera: algo se está moviendo dentro de ti."
+Hoy, ${today} ...
 
-3. Tercera línea (fecha, muy breve):
-Hoy, ${today}
+Después continúa el horóscopo.
 
-4. Después escribe el horóscopo en formato corto, visual y fácil de leer.
+Debe escribirse en DOS párrafos separados por una línea en blanco.
 
-REGLAS MUY IMPORTANTES:
-- Máximo 5 frases en total (sin contar el saludo)
-- Frases cortas (máx 12 palabras)
-- Usa saltos de línea frecuentes (cada 1-2 frases)
-- Nada de párrafos largos
-- Tono místico pero moderno
-- Que suene personal, no genérico
-- Nada de texto denso
+Ten en cuenta la carta astral de esta persona:
 
-5. Termina SIEMPRE con una acción o consejo claro:
-Ejemplo:
-"Consejo: enfócate en una sola cosa y termina lo que empiezas."
-
-DATOS DE LA PERSONA:
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
 
-IMPORTANTE:
-- No escribas párrafos largos
-- No expliques astrología
-- No uses lenguaje complicado
-- Debe leerse rápido en móvil
+Reglas:
+- máximo 4 frases
+- tono místico pero moderno
+- positivo e inspirador
+- fácil de leer
+- siempre en 2 párrafos
+- deja una línea en blanco entre párrafos
 `;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": \`Bearer \${process.env.OPENAI_API_KEY}\`
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
         model: "gpt-4.1-mini",
@@ -133,7 +120,7 @@ IMPORTANTE:
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: \`M\${rowIndex}:N\${rowIndex}\`,
+      range: `M${rowIndex}:N${rowIndex}`,
       valueInputOption: "RAW",
       requestBody: {
         values: [[message, todayKey]]
