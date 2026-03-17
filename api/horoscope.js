@@ -77,45 +77,49 @@ export default async function handler(req, res) {
     const prompt = `
 Escribe un horóscopo diario PREMIUM en español, diseñado para leerse en móvil.
 
-FORMATO OBLIGATORIO:
+FORMATO OBLIGATORIO (ESTRICTO):
 
 Hola ${person.name},
 
 Hoy, ${today}
 
-✨ [Frase corta de impacto que enganche fuerte]
+✨ [Frase de impacto muy corta]
 
-[Frase breve sobre su energía principal]
+[Frase corta]
 
-[Frase breve conectando Sol, Luna y Ascendente]
+[Frase corta]
 
-[Frase breve emocional o de identidad]
+[Frase conectando Sol, Luna y Ascendente]
 
-🔥 [Frase final potente tipo consejo o cierre memorable]
+[Frase emocional breve]
 
-REGLAS CLAVE:
-- Máximo 6 frases (sin contar saludo)
-- Cada frase en una línea (IMPORTANTE)
-- Nada de párrafos largos
-- Lenguaje simple pero elegante
-- Que se pueda escanear rápido
-- Que parezca exclusivo y personal
+🔥 [Frase final muy potente]
+
+REGLAS CRÍTICAS (OBLIGATORIO CUMPLIR):
+- Cada frase DEBE ir en una línea independiente
+- NUNCA juntar dos frases en la misma línea
+- NUNCA escribir párrafos largos
+- Máximo 6 frases en total (sin contar saludo)
+- Cada línea debe tener máximo 12-15 palabras
+- Debe verse como bloques separados, no texto continuo
 
 ESTILO:
 - Místico pero moderno
-- Directo (sin relleno)
-- Emocional pero no cursi
-- Que haga sentir especial al usuario
-- Evitar frases genéricas tipo "hoy será un buen día"
+- Directo y claro
+- Nada genérico
+- Sensación premium
+- Fácil de escanear en móvil
 
-HOOK (MUY IMPORTANTE):
-- La primera frase debe crear sensación de “hoy es importante”
-- Ej: ventaja, claridad, oportunidad, cambio
+HOOK:
+- La primera frase debe generar impacto inmediato
+- Debe hacer sentir que hoy es importante
 
-CIERRE (MUY IMPORTANTE):
-- Frase corta, potente y memorable
-- Debe sentirse como una verdad fuerte o decisión
-- Ej: "Hoy decides quién quieres ser"
+CIERRE:
+- Frase corta, contundente y memorable
+- Tipo decisión, poder o momento clave
+
+IMPORTANTE:
+Si no cumples el formato EXACTO, la respuesta no es válida.
 
 DATOS:
 Sol: ${person.sun}
