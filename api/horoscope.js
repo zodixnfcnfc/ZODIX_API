@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
 
-    const { uid } = req.query;
+    const { uid, type } = req.query;
 
     const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
 
@@ -41,6 +41,9 @@ export default async function handler(req, res) {
 
         person = {
           name: rows[i][4] || "",
+          birth_date: rows[i][5] || "",
+          birth_hour: rows[i][6] || "",
+          birth_place: rows[i][7] || "",
           sun: rows[i][8] || "",
           moon: rows[i][9] || "",
           rising: rows[i][10] || "",
@@ -55,6 +58,13 @@ export default async function handler(req, res) {
     if (!person) {
       return res.status(404).json({ error: "Person not found" });
     }
+
+    /* 🔮 PERFIL ASTRAL */
+    if (type === "profile") {
+      return res.status(200).json(person);
+    }
+
+    /* ⚡ ENERGÍA DE HOY */
 
     const today = new Date().toLocaleDateString("es-ES", {
       day: "numeric",
@@ -95,31 +105,16 @@ Hoy, ${today}
 
 🔥 [Frase final muy potente]
 
-REGLAS CRÍTICAS (OBLIGATORIO CUMPLIR):
-- Cada frase DEBE ir en una línea independiente
-- NUNCA juntar dos frases en la misma línea
-- NUNCA escribir párrafos largos
-- Máximo 6 frases en total (sin contar saludo)
-- Cada línea debe tener máximo 12-15 palabras
-- Debe verse como bloques separados, no texto continuo
+REGLAS CRÍTICAS:
+- Cada frase en línea separada
+- Máx 6 frases (sin saludo)
+- Máx 12-15 palabras por línea
+- Nada de párrafos
 
 ESTILO:
-- Místico pero moderno
-- Directo y claro
-- Nada genérico
-- Sensación premium
-- Fácil de escanear en móvil
-
-HOOK:
-- La primera frase debe generar impacto inmediato
-- Debe hacer sentir que hoy es importante
-
-CIERRE:
-- Frase corta, contundente y memorable
-- Tipo decisión, poder o momento clave
-
-IMPORTANTE:
-Si no cumples el formato EXACTO, la respuesta no es válida.
+- Místico moderno
+- Directo
+- Premium
 
 DATOS:
 Sol: ${person.sun}
