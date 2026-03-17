@@ -1,4 +1,4 @@
-import { google } from "googleapis";
+import { goimport { google } from "googleapis";
 
 export default async function handler(req, res) {
 
@@ -74,7 +74,7 @@ export default async function handler(req, res) {
 
     const today = new Date().toISOString().split("T")[0];
 
-    /* ⚡ ENERGÍA (PROMPT NUEVO PRO) */
+    /* ⚡ ENERGÍA (MEJORADO PERO SEGURO) */
 
     if (type !== "affinity") {
 
@@ -87,13 +87,13 @@ export default async function handler(req, res) {
       const prompt = `
 Escribe un horóscopo diario PREMIUM en español.
 
-FORMATO OBLIGATORIO (ESTRICTO):
+FORMATO EXACTO (NO ROMPER):
 
 Hola ${person.name},
 
 Hoy, ${todayFormatted}
 
-✨ [Frase de impacto muy potente]
+✨ [Frase potente]
 
 [Frase corta]
 
@@ -101,34 +101,22 @@ Hoy, ${todayFormatted}
 
 [Frase conectando Sol, Luna y Ascendente]
 
-[Frase emocional breve]
+[Frase emocional]
 
 🔥 [Frase final contundente]
 
-REGLAS CRÍTICAS:
-- Cada frase en una línea separada
-- NO párrafos
-- Máximo 6 frases (sin saludo)
-- Máximo 12 palabras por línea
-- Debe ser visual, tipo app móvil
-- Nada genérico
-- Nada tipo “mensaje inspirador”
-- Nada explicativo largo
+REGLAS:
+- Cada línea separada (IMPORTANTE)
+- No párrafos
+- Máx 6 frases (sin saludo)
+- Máx 12 palabras por línea
+- Estilo claro y directo
 
 ESTILO:
 - Místico moderno
-- Directo
-- Poder personal
-- Sensación premium
-- Engancha desde la primera línea
-
-HOOK:
-- La primera frase debe ser muy potente
-- Debe hacer sentir que HOY es importante
-
-CIERRE:
-- Frase corta, fuerte, memorable
-- Sensación de decisión o poder
+- Impactante
+- Nada genérico
+- Nada explicativo largo
 
 DATOS:
 Sol: ${person.sun}
@@ -165,7 +153,7 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD (NO TOCADO) */
+    /* 💫 AFINIDAD (NO TOCAR) */
 
     if (type === "affinity") {
 
