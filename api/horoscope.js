@@ -66,9 +66,16 @@ export default async function handler(req, res) {
       return res.status(200).json(person);
     }
 
+    const todayFormatted = new Date().toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+
     const today = new Date().toISOString().split("T")[0];
 
-    /* ⚡ ENERGÍA */
+    /* ⚡ ENERGÍA (PROMPT NUEVO PRO) */
+
     if (type !== "affinity") {
 
       if (person.message_date === today && person.message_daily) {
@@ -78,19 +85,55 @@ export default async function handler(req, res) {
       }
 
       const prompt = `
+Escribe un horóscopo diario PREMIUM en español.
+
+FORMATO OBLIGATORIO (ESTRICTO):
+
 Hola ${person.name},
 
-✨ Hoy hay una energía importante para ti
+Hoy, ${todayFormatted}
 
-Actúa con claridad  
-Confía en tu intuición  
-No ignores señales  
+✨ [Frase de impacto muy potente]
 
-Tu Sol en ${person.sun} marca el impulso  
-Tu Luna en ${person.moon} guía tus emociones  
-Tu Ascendente en ${person.rising} define tu camino  
+[Frase corta]
 
-🔥 Hoy puede marcar un antes y un después
+[Frase corta]
+
+[Frase conectando Sol, Luna y Ascendente]
+
+[Frase emocional breve]
+
+🔥 [Frase final contundente]
+
+REGLAS CRÍTICAS:
+- Cada frase en una línea separada
+- NO párrafos
+- Máximo 6 frases (sin saludo)
+- Máximo 12 palabras por línea
+- Debe ser visual, tipo app móvil
+- Nada genérico
+- Nada tipo “mensaje inspirador”
+- Nada explicativo largo
+
+ESTILO:
+- Místico moderno
+- Directo
+- Poder personal
+- Sensación premium
+- Engancha desde la primera línea
+
+HOOK:
+- La primera frase debe ser muy potente
+- Debe hacer sentir que HOY es importante
+
+CIERRE:
+- Frase corta, fuerte, memorable
+- Sensación de decisión o poder
+
+DATOS:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
 `;
 
       const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -122,7 +165,7 @@ Tu Ascendente en ${person.rising} define tu camino
       });
     }
 
-    /* 💫 AFINIDAD PRO */
+    /* 💫 AFINIDAD (NO TOCADO) */
 
     if (type === "affinity") {
 
