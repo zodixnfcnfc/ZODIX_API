@@ -75,31 +75,47 @@ export default async function handler(req, res) {
     }
 
     const prompt = `
-Escribe un horóscopo diario personalizado en español.
+Escribe un horóscopo diario PREMIUM en español, diseñado para leerse en móvil.
 
-Debe empezar EXACTAMENTE así:
+FORMATO OBLIGATORIO:
 
 Hola ${person.name},
 
 Hoy, ${today}
 
-Después escribe el mensaje.
+✨ [Frase corta de impacto que enganche fuerte]
 
-IMPORTANTE:
-- Máximo 5 frases en total
-- Frases cortas
-- Usa saltos de línea (cada 1-2 frases)
+[Frase breve sobre su energía principal]
+
+[Frase breve conectando Sol, Luna y Ascendente]
+
+[Frase breve emocional o de identidad]
+
+🔥 [Frase final potente tipo consejo o cierre memorable]
+
+REGLAS CLAVE:
+- Máximo 6 frases (sin contar saludo)
+- Cada frase en una línea (IMPORTANTE)
 - Nada de párrafos largos
-- Fácil de leer en móvil
+- Lenguaje simple pero elegante
+- Que se pueda escanear rápido
+- Que parezca exclusivo y personal
 
 ESTILO:
-- Primera frase debe enganchar (hook)
-- Tono místico pero moderno
-- Que se sienta personal
-- Nada genérico
+- Místico pero moderno
+- Directo (sin relleno)
+- Emocional pero no cursi
+- Que haga sentir especial al usuario
+- Evitar frases genéricas tipo "hoy será un buen día"
 
-FINAL:
-- Termina con un consejo claro
+HOOK (MUY IMPORTANTE):
+- La primera frase debe crear sensación de “hoy es importante”
+- Ej: ventaja, claridad, oportunidad, cambio
+
+CIERRE (MUY IMPORTANTE):
+- Frase corta, potente y memorable
+- Debe sentirse como una verdad fuerte o decisión
+- Ej: "Hoy decides quién quieres ser"
 
 DATOS:
 Sol: ${person.sun}
