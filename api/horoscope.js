@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
     const sheetData = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "A:P"
+      range: "A:N"
     });
 
     const rows = sheetData.data.values;
@@ -48,9 +48,7 @@ export default async function handler(req, res) {
           moon: rows[i][9] || "",
           rising: rows[i][10] || "",
           message_daily: rows[i][12] || "",
-          message_date: rows[i][13] || "",
-          affinity_daily: rows[i][14] || "",
-          affinity_date: rows[i][15] || ""
+          message_date: rows[i][13] || ""
         };
 
         break;
@@ -61,53 +59,62 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Person not found" });
     }
 
-    /* 🔮 PERFIL */
+    /* 🔮 PERFIL ASTRAL */
     if (type === "profile") {
       return res.status(200).json(person);
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    /* ⚡ ENERGÍA DE HOY */
 
-    /* ⚡ ENERGÍA */
-    if (type !== "affinity") {
+    const today = new Date().toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
 
-      if (person.message_date === today && person.message_daily) {
-        return res.status(200).json({
-          choices: [{ message: { content: person.message_daily } }]
-        });
-      }
+    const todayKey = new Date().toISOString().split("T")[0];
 
-      const todayFormatted = new Date().toLocaleDateString("es-ES", {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
+    if (person.message_date === todayKey && person.message_daily) {
+
+      return res.status(200).json({
+        choices: [
+          { message: { content: person.message_daily } }
+        ]
       });
 
-      const prompt = `
-Eres un astrólogo místico premium de una marca de lujo llamada ZODIX.
+    }
 
-Tu estilo es:
-poético, elegante, breve, misterioso, emocional.
+    const prompt = `
+Escribe un horóscopo diario PREMIUM en español, diseñado para leerse en móvil.
 
-REGLAS OBLIGATORIAS:
-- Máximo 6-7 líneas
-- Una frase por línea
-- Frases cortas
-- NO listas
-- NO explicaciones
-- NO hablar de “tu Sol en…” ni describir signos
-- NO hacer preguntas
-- NO parecer ChatGPT
-- SOLO tono místico tipo profecía
-- Máximo 2 emojis (✨🔥)
-
-FORMATO EXACTO:
+FORMATO OBLIGATORIO (ESTRICTO):
 
 Hola ${person.name},
 
-Hoy, ${todayFormatted}
+Hoy, ${today}
 
-[frases poéticas línea a línea]
+✨ [Frase de impacto muy corta]
+
+[Frase corta]
+
+[Frase corta]
+
+[Frase conectando Sol, Luna y Ascendente]
+
+[Frase emocional breve]
+
+🔥 [Frase final muy potente]
+
+REGLAS CRÍTICAS:
+- Cada frase en línea separada
+- Máx 6 frases (sin saludo)
+- Máx 12-15 palabras por línea
+- Nada de párrafos
+
+ESTILO:
+- Místico moderno
+- Directo
+- Premium
 
 DATOS:
 Sol: ${person.sun}
@@ -115,104 +122,36 @@ Luna: ${person.moon}
 Ascendente: ${person.rising}
 `;
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
 
-      const data = await response.json();
-      const message = data.choices[0].message.content;
+    const data = await response.json();
 
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `M${rowIndex}:N${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[message, today]]
-        }
-      });
+    const message = data.choices[0].message.content;
 
-      return res.status(200).json({
-        choices: [{ message: { content: message } }]
-      });
-    }
-
-    /* 💫 AFINIDAD PRO */
-
-    if (type === "affinity") {
-
-      if (person.affinity_date === today && person.affinity_daily) {
-        return res.status(200).json({
-          choices: [{ message: { content: person.affinity_daily } }]
-        });
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: sheetId,
+      range: `M${rowIndex}:N${rowIndex}`,
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [[message, todayKey]]
       }
+    });
 
-      const prompt = `
-Escribe una afinidad astral diaria PREMIUM.
-
-FORMATO OBLIGATORIO:
-
-Hoy conectas especialmente con:
-
-🔥 [Signo] → [conexión emocional breve]
-
-💫 [Signo] → [tipo de conexión]
-
-⚡ [Signo] → [sensación o energía]
-
-⚠️ Evita hoy:
-
-[Signo] → [por qué evitarlo]
-
-💡 Consejo:
-[frase final potente]
-
-REGLAS:
-- Cada frase en una línea
-- Máx 10 palabras por línea
-- No párrafos
-
-DATOS:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-`;
-
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
-
-      const data = await response.json();
-      const message = data.choices[0].message.content;
-
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `O${rowIndex}:P${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[message, today]]
-        }
-      });
-
-      return res.status(200).json({
-        choices: [{ message: { content: message } }]
-      });
-    }
+    res.status(200).json({
+      choices: [
+        { message: { content: message } }
+      ]
+    });
 
   } catch (error) {
 
