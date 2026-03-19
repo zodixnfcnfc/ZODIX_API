@@ -74,7 +74,7 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* ⚡ ENERGÍA (PROMPT MEJORADO CON HOOK) */
+    /* ⚡ ENERGÍA (PROMPT FINAL CON HOOK + ACCIÓN) */
 
     if (type !== "affinity") {
 
@@ -111,16 +111,22 @@ Hoy, ${todayFormatted}
 
 [Frase que conecte Sol, Luna y Ascendente de forma natural]
 
-[Frase breve de empoderamiento o intuición]
+[Frase con recomendación práctica o acción concreta para hoy]
+
+[Otra frase opcional de acción o enfoque mental]
 
 🔥 [Frase final contundente tipo destino/poder]
 
 REGLAS:
 - Cada frase separada por UNA línea en blanco
-- Máximo 6 frases (sin contar saludo)
+- Máximo 6-7 frases (sin contar saludo)
 - Máximo 10-12 palabras por línea
 - Nada de párrafos largos
 - Nada genérico
+
+CLAVE:
+- Debe hacer sentir QUÉ HACER HOY
+- Mezclar emoción + acción (muy importante)
 
 ESTILO:
 - Lenguaje emocional (energía, destino, poder, intuición, fuego)
