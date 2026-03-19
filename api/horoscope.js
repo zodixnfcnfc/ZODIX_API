@@ -74,7 +74,7 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* ⚡ ENERGÍA (PROMPT NUEVO BUENO) */
+    /* ⚡ ENERGÍA (PROMPT MEJORADO CON HOOK) */
 
     if (type !== "affinity") {
 
@@ -85,45 +85,49 @@ export default async function handler(req, res) {
       }
 
       const prompt = `
-Escribe un horóscopo diario PREMIUM en español.
+Genera un mensaje diario de energía/horóscopo altamente emocional, personalizado y adictivo.
 
-FORMATO OBLIGATORIO (ESTRICTO):
+IMPORTANTE:
+- El texto debe estar en español.
+- Debe incluir el nombre de la persona.
+- Debe incluir la fecha actual.
+- Tono premium, místico, intenso y poderoso.
+- NO debe sonar genérico.
+- Debe enganchar desde la primera línea (HOOK FUERTE).
+- Usa frases cortas.
+- SIEMPRE deja una línea en blanco entre frases.
+
+ESTRUCTURA OBLIGATORIA:
 
 Hola ${person.name},
 
 Hoy, ${todayFormatted}
 
-✨ [Frase de impacto muy potente]
+✨ [HOOK muy potente, máximo 10 palabras]
 
-[Frase corta]
+[Frase que genere intriga o tensión]
 
-[Frase corta]
+[Frase emocional conectada con su energía]
 
-[Frase que conecte Sol, Luna y Ascendente]
+[Frase que conecte Sol, Luna y Ascendente de forma natural]
 
-[Frase emocional breve]
+[Frase breve de empoderamiento o intuición]
 
-🔥 [Frase final muy potente]
+🔥 [Frase final contundente tipo destino/poder]
 
 REGLAS:
-- Cada frase en una línea separada
-- NO párrafos
-- Máximo 6 frases (sin saludo)
+- Cada frase separada por UNA línea en blanco
+- Máximo 6 frases (sin contar saludo)
 - Máximo 10-12 palabras por línea
-- Nada explicativo largo
+- Nada de párrafos largos
 - Nada genérico
-- Debe sonar potente y personal
 
 ESTILO:
-- Místico moderno
-- Directo
-- Energía alta
-- Sensación de poder
+- Lenguaje emocional (energía, destino, poder, intuición, fuego)
+- Sensación de mensaje exclusivo
+- Directo y potente
 
-IMPORTANTE:
-Debe parecer una lectura exclusiva, no genérica.
-
-DATOS:
+DATOS ASTRALES:
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
