@@ -61,8 +61,6 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Person not found" });
     }
 
-    /* 🔮 PERFIL */
-
     if (type === "profile") {
       return res.status(200).json(person);
     }
@@ -99,8 +97,8 @@ export default async function handler(req, res) {
             sun: rows[i][8] || "",
             moon: rows[i][9] || "",
             rising: rows[i][10] || "",
-            pair_message: rows[i][17] || "", // R
-            pair_date: rows[i][18] || ""     // S
+            pair_message: rows[i][17] || "",
+            pair_date: rows[i][18] || ""
           };
 
           break;
@@ -111,8 +109,6 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
-      /* SI YA EXISTE MENSAJE HOY */
-
       if (personB.pair_date === today && personB.pair_message) {
 
         return res.status(200).json({
@@ -120,8 +116,6 @@ export default async function handler(req, res) {
         });
 
       }
-
-      /* 🎯 PORCENTAJE FIJO POR DÍA */
 
       const idsOrdenados =
         [uid, other].sort().join("");
@@ -137,14 +131,14 @@ export default async function handler(req, res) {
       }
 
       const percentage =
-        30 + Math.abs(hash % 71); // 30–100%
+        30 + Math.abs(hash % 71);
 
-      /* PROMPT */
+      /* 🔧 PROMPT MEJORADO (CORTO Y DIRECTO) */
 
       const prompt = `
-Genera una conexión energética diaria entre dos pulseras ZODIX.
+Genera un mensaje corto y claro entre dos personas.
 
-FORMATO:
+FORMATO EXACTO:
 
 ${person.name} (${person.sun})
 
@@ -154,23 +148,19 @@ ${personB.name} (${personB.sun})
 
 🔗 Conexión energética hoy: ${percentage}%
 
-✨ Describe cómo se sienten hoy.
+✨ Una frase clara sobre cómo se llevan hoy.
 
-🔥 Da una acción concreta para hoy.
+🔥 Una recomendación simple para hoy.
 
-💫 Frase final emocional potente.
+💫 Una frase positiva final.
 
 Fecha: ${todayFormatted}
 
-DATOS A:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-
-DATOS B:
-Sol: ${personB.sun}
-Luna: ${personB.moon}
-Ascendente: ${personB.rising}
+IMPORTANTE:
+- Frases cortas
+- Lenguaje claro
+- No místico
+- Fácil de leer
 `;
 
       const response = await fetch(
@@ -191,8 +181,6 @@ Ascendente: ${personB.rising}
       const data = await response.json();
       const message = data.choices[0].message.content;
 
-      /* GUARDAR EN R y S */
-
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `R${rowIndexB}:S${rowIndexB}`,
@@ -208,7 +196,7 @@ Ascendente: ${personB.rising}
 
     }
 
-    /* ⚡ ENERGÍA */
+    /* ⚡ ENERGÍA — SIN CAMBIOS */
 
     if (type !== "affinity") {
 
@@ -269,7 +257,7 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD */
+    /* 💫 AFINIDAD — SIN CAMBIOS */
 
     if (type === "affinity") {
 
