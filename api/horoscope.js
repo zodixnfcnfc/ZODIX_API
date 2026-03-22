@@ -8,11 +8,9 @@ export default async function handler(req, res) {
 
     const { uid, type, other } = req.query;
 
-    const sheetId =
-      "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
+    const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
 
-    const credentials =
-      JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
 
     const auth = new google.auth.JWT(
       credentials.client_email,
@@ -21,21 +19,19 @@ export default async function handler(req, res) {
       ["https://www.googleapis.com/auth/spreadsheets"]
     );
 
-    const sheets =
-      google.sheets({ version: "v4", auth });
+    const sheets = google.sheets({ version: "v4", auth });
 
-    const sheetData =
-      await sheets.spreadsheets.values.get({
-        spreadsheetId: sheetId,
-        range: "A:S"
-      });
+    const sheetData = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: "A:S"
+    });
 
     const rows = sheetData.data.values;
 
     let rowIndex = -1;
     let person = null;
 
-    /* BUSCAR UID */
+    /* 🔎 BUSCAR PERSONA A */
 
     for (let i = 1; i < rows.length; i++) {
 
@@ -74,34 +70,26 @@ export default async function handler(req, res) {
     }
 
     if (!person) {
-
-      return res.status(404).json({
-        error: "Person not found"
-      });
-
+      return res.status(404).json({ error: "Person not found" });
     }
 
     if (type === "profile") {
-
       return res.status(200).json(person);
-
     }
 
-    const today =
-      new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
 
-    const todayFormatted =
-      new Date().toLocaleDateString("es-ES", {
-        day: "numeric",
-        month: "long",
-        year: "numeric"
-      });
+    const todayFormatted = new Date().toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
 
-    /* 🔗 PAIR */
+    /* 🔗 CONEXIÓN */
 
     if (type === "pair") {
 
-      /* 🧠 SOLO LECTURA */
+      /* 🔎 SOLO LEER */
 
       if (!other) {
 
@@ -113,8 +101,7 @@ export default async function handler(req, res) {
           return res.status(200).json({
             choices: [{
               message: {
-                content:
-                  person.pair_message
+                content: person.pair_message
               }
             }]
           });
@@ -124,15 +111,14 @@ export default async function handler(req, res) {
         return res.status(200).json({
           choices: [{
             message: {
-              content:
-                "No hay conexión activa aún."
+              content: "No hay conexión activa aún."
             }
           }]
         });
 
       }
 
-      /* 🔎 BUSCAR SEGUNDA */
+      /* 🔎 BUSCAR PERSONA B */
 
       let personB = null;
       let rowIndexB = -1;
@@ -161,11 +147,9 @@ export default async function handler(req, res) {
       }
 
       if (!personB) {
-
         return res.status(404).json({
           error: "Second person not found"
         });
-
       }
 
       /* 🎲 GENERAR */
@@ -174,7 +158,8 @@ export default async function handler(req, res) {
         [uid, other].sort().join("");
 
       const seed =
-        idsOrdenados + today;
+        idsOrdenados +
+        today;
 
       let hash = 0;
 
@@ -209,43 +194,52 @@ ${personB.name} (${personB.sun})
 Fecha: ${todayFormatted}
 `;
 
-      const response =
-        await fetch(
-          "https://api.openai.com/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type":
-                "application/json",
-              "Authorization":
-                `Bearer ${process.env.OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-              model: "gpt-4.1-mini",
-              messages: [
-                {
-                  role: "user",
-                  content: prompt
-                }
-              ]
-            })
-          }
-        );
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization":
+              `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [
+              { role: "user", content: prompt }
+            ]
+          })
+        }
+      );
 
-      const data =
-        await response.json();
+      const data = await response.json();
 
       const message =
         data.choices[0].message.content;
 
-      /* 💾 GUARDAR */
+      /* 💾 GUARDAR EN B */
 
       await sheets.spreadsheets.values.update({
 
         spreadsheetId: sheetId,
 
-        range:
-          `R${rowIndexB}:S${rowIndexB}`,
+        range: `R${rowIndexB}:S${rowIndexB}`,
+
+        valueInputOption: "RAW",
+
+        requestBody: {
+          values: [[message, today]]
+        }
+
+      });
+
+      /* 💾 GUARDAR TAMBIÉN EN A */
+
+      await sheets.spreadsheets.values.update({
+
+        spreadsheetId: sheetId,
+
+        range: `R${rowIndex}:S${rowIndex}`,
 
         valueInputOption: "RAW",
 
@@ -270,10 +264,8 @@ Fecha: ${todayFormatted}
   } catch (error) {
 
     res.status(500).json({
-
       error: "server_error",
       message: error.toString()
-
     });
 
   }
