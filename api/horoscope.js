@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
 
-    const { uid, type, other } = req.query;
+    const { uid, type } = req.query;
 
     const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
 
@@ -62,7 +62,6 @@ export default async function handler(req, res) {
     }
 
     /* 🔮 PERFIL */
-
     if (type === "profile") {
       return res.status(200).json(person);
     }
@@ -75,94 +74,7 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔗 NUEVO: COMPATIBILIDAD ENTRE DOS PERSONAS */
-
-    if (type === "pair") {
-
-      if (!other) {
-        return res.status(400).json({ error: "Missing second UID" });
-      }
-
-      let personB = null;
-
-      for (let i = 1; i < rows.length; i++) {
-
-        const orderId = rows[i][0] || "";
-
-        if (orderId.includes(other)) {
-
-          personB = {
-            name: rows[i][4] || "",
-            sun: rows[i][8] || "",
-            moon: rows[i][9] || "",
-            rising: rows[i][10] || ""
-          };
-
-          break;
-        }
-      }
-
-      if (!personB) {
-        return res.status(404).json({ error: "Second person not found" });
-      }
-
-      const prompt = `
-Genera una compatibilidad astral entre dos personas.
-
-IMPORTANTE:
-- Texto en español
-- Debe incluir ambos nombres
-- Debe incluir signos solares
-- Debe dar un porcentaje entre 60% y 95%
-- Debe sonar emocional y premium
-
-FORMATO OBLIGATORIO:
-
-✨ Afinidad Detectada
-
-${person.name} (${person.sun})
-+
-${personB.name} (${personB.sun})
-
-Afinidad hoy: [porcentaje]%
-
-💬 [mensaje emocional breve y poderoso]
-
-Fecha: ${todayFormatted}
-
-DATOS PERSONA A:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-
-DATOS PERSONA B:
-Sol: ${personB.sun}
-Luna: ${personB.moon}
-Ascendente: ${personB.rising}
-`;
-
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
-
-      const data = await response.json();
-      const message = data.choices[0].message.content;
-
-      return res.status(200).json({
-        choices: [{ message: { content: message } }]
-      });
-
-    }
-
-    /* ⚡ ENERGÍA */
+    /* ⚡ ENERGÍA (PROMPT FINAL CON HOOK + ACCIÓN) */
 
     if (type !== "affinity") {
 
@@ -175,14 +87,53 @@ Ascendente: ${personB.rising}
       const prompt = `
 Genera un mensaje diario de energía/horóscopo altamente emocional, personalizado y adictivo.
 
+IMPORTANTE:
+- El texto debe estar en español.
+- Debe incluir el nombre de la persona.
+- Debe incluir la fecha actual.
+- Tono premium, místico, intenso y poderoso.
+- NO debe sonar genérico.
+- Debe enganchar desde la primera línea (HOOK FUERTE).
+- Usa frases cortas.
+- SIEMPRE deja una línea en blanco entre frases.
+
+ESTRUCTURA OBLIGATORIA:
+
 Hola ${person.name},
 
 Hoy, ${todayFormatted}
 
-✨ Tu energía despierta oportunidades ocultas hoy.
+✨ [HOOK muy potente, máximo 10 palabras]
 
-Sigue tu intuición con fuerza.
+[Frase que genere intriga o tensión]
 
+[Frase emocional conectada con su energía]
+
+[Frase que conecte Sol, Luna y Ascendente de forma natural]
+
+[Frase con recomendación práctica o acción concreta para hoy]
+
+[Otra frase opcional de acción o enfoque mental]
+
+🔥 [Frase final contundente tipo destino/poder]
+
+REGLAS:
+- Cada frase separada por UNA línea en blanco
+- Máximo 6-7 frases (sin contar saludo)
+- Máximo 10-12 palabras por línea
+- Nada de párrafos largos
+- Nada genérico
+
+CLAVE:
+- Debe hacer sentir QUÉ HACER HOY
+- Mezclar emoción + acción (muy importante)
+
+ESTILO:
+- Lenguaje emocional (energía, destino, poder, intuición, fuego)
+- Sensación de mensaje exclusivo
+- Directo y potente
+
+DATOS ASTRALES:
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
@@ -215,10 +166,9 @@ Ascendente: ${person.rising}
       return res.status(200).json({
         choices: [{ message: { content: message } }]
       });
-
     }
 
-    /* 💫 AFINIDAD */
+    /* 💫 AFINIDAD (NO TOCADO) */
 
     if (type === "affinity") {
 
@@ -229,8 +179,31 @@ Ascendente: ${person.rising}
       }
 
       const prompt = `
-Escribe una afinidad astral diaria.
+Escribe una afinidad astral diaria PREMIUM.
 
+FORMATO OBLIGATORIO:
+
+Hoy conectas especialmente con:
+
+🔥 [Signo] → [conexión emocional breve]
+
+💫 [Signo] → [tipo de conexión]
+
+⚡ [Signo] → [sensación o energía]
+
+⚠️ Evita hoy:
+
+[Signo] → [por qué evitarlo]
+
+💡 Consejo:
+[frase final potente]
+
+REGLAS:
+- Cada frase en una línea
+- Máx 10 palabras por línea
+- No párrafos
+
+DATOS:
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
@@ -263,7 +236,6 @@ Ascendente: ${person.rising}
       return res.status(200).json({
         choices: [{ message: { content: message } }]
       });
-
     }
 
   } catch (error) {
