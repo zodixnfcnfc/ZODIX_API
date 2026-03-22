@@ -61,8 +61,6 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Person not found" });
     }
 
-    /* 🔮 PERFIL */
-
     if (type === "profile") {
       return res.status(200).json(person);
     }
@@ -111,8 +109,6 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
-      /* SI YA EXISTE MENSAJE HOY */
-
       if (personB.pair_date === today && personB.pair_message) {
 
         return res.status(200).json({
@@ -121,7 +117,7 @@ export default async function handler(req, res) {
 
       }
 
-      /* 🎯 PORCENTAJE FIJO POR DÍA */
+      /* 🎯 PORCENTAJE */
 
       const idsOrdenados =
         [uid, other].sort().join("");
@@ -139,31 +135,37 @@ export default async function handler(req, res) {
       const percentage =
         30 + Math.abs(hash % 71);
 
-      /* 🆕 PROMPT CORTO Y DIRECTO */
+      /* 🆕 PROMPT ESTILO IMAGEN */
 
       const prompt = `
-Genera una conexión diaria entre dos pulseras ZODIX.
+Genera una afinidad entre dos personas.
 
 MUY IMPORTANTE:
-- Texto corto
-- Claro
-- Sin lenguaje místico
-- Máximo 5 líneas útiles
-- Fácil de leer en móvil
+- Mantén exactamente este formato
+- Frases cortas
+- Fácil lectura en móvil
+- Máximo 3 frases cortas
 
 FORMATO EXACTO:
 
-${person.name} (${person.sun})
+✨ Afinidad Detectada
+
+${person.name.toUpperCase()} (${person.sun})
+
 +
-${personB.name} (${personB.sun})
 
-🔗 Conexión hoy: ${percentage}%
+${personB.name.toUpperCase()} (${personB.sun})
 
-Sensación: frase corta y directa.
+🔗 Conexión energética hoy:
+${percentage}%
 
-Acción: acción concreta breve.
+✨ Frase corta positiva.
 
-${todayFormatted}
+🔥 Consejo breve.
+
+💫 Mensaje final corto.
+
+Fecha: ${todayFormatted}
 
 DATOS A:
 Sol: ${person.sun}
@@ -186,7 +188,7 @@ Ascendente: ${personB.rising}
           },
           body: JSON.stringify({
             model: "gpt-4.1-mini",
-            max_tokens: 120,
+            max_tokens: 150,
             temperature: 0.7,
             messages: [{ role: "user", content: prompt }]
           })
@@ -195,8 +197,6 @@ Ascendente: ${personB.rising}
 
       const data = await response.json();
       const message = data.choices[0].message.content;
-
-      /* GUARDAR EN R y S */
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
@@ -213,7 +213,7 @@ Ascendente: ${personB.rising}
 
     }
 
-    /* ⚡ ENERGÍA */
+    /* ⚡ RESTO SIN CAMBIOS */
 
     if (type !== "affinity") {
 
@@ -263,67 +263,6 @@ Ascendente: ${person.rising}
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `M${rowIndex}:N${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[message, today]]
-        }
-      });
-
-      return res.status(200).json({
-        choices: [{ message: { content: message } }]
-      });
-    }
-
-    /* 💫 AFINIDAD */
-
-    if (type === "affinity") {
-
-      if (person.affinity_date === today && person.affinity_daily) {
-        return res.status(200).json({
-          choices: [{ message: { content: person.affinity_daily } }]
-        });
-      }
-
-      const prompt = `
-Escribe una afinidad diaria.
-
-🔥 Signo positivo
-
-💫 Signo fluido
-
-⚡ Signo intenso
-
-⚠️ Evita signo
-
-💡 Consejo final
-
-DATOS:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-`;
-
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
-
-      const data = await response.json();
-      const message = data.choices[0].message.content;
-
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `O${rowIndex}:P${rowIndex}`,
         valueInputOption: "RAW",
         requestBody: {
           values: [[message, today]]
