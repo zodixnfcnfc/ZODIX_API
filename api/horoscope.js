@@ -99,8 +99,8 @@ export default async function handler(req, res) {
             sun: rows[i][8] || "",
             moon: rows[i][9] || "",
             rising: rows[i][10] || "",
-            pair_message: rows[i][17] || "", // R
-            pair_date: rows[i][18] || ""     // S
+            pair_message: rows[i][17] || "",
+            pair_date: rows[i][18] || ""
           };
 
           break;
@@ -137,30 +137,33 @@ export default async function handler(req, res) {
       }
 
       const percentage =
-        30 + Math.abs(hash % 71); // 30–100%
+        30 + Math.abs(hash % 71);
 
-      /* PROMPT */
+      /* 🆕 PROMPT CORTO Y DIRECTO */
 
       const prompt = `
-Genera una conexión energética diaria entre dos pulseras ZODIX.
+Genera una conexión diaria entre dos pulseras ZODIX.
 
-FORMATO:
+MUY IMPORTANTE:
+- Texto corto
+- Claro
+- Sin lenguaje místico
+- Máximo 5 líneas útiles
+- Fácil de leer en móvil
+
+FORMATO EXACTO:
 
 ${person.name} (${person.sun})
-
 +
-
 ${personB.name} (${personB.sun})
 
-🔗 Conexión energética hoy: ${percentage}%
+🔗 Conexión hoy: ${percentage}%
 
-✨ Describe cómo se sienten hoy.
+Sensación: frase corta y directa.
 
-🔥 Da una acción concreta para hoy.
+Acción: acción concreta breve.
 
-💫 Frase final emocional potente.
-
-Fecha: ${todayFormatted}
+${todayFormatted}
 
 DATOS A:
 Sol: ${person.sun}
@@ -183,6 +186,8 @@ Ascendente: ${personB.rising}
           },
           body: JSON.stringify({
             model: "gpt-4.1-mini",
+            max_tokens: 120,
+            temperature: 0.7,
             messages: [{ role: "user", content: prompt }]
           })
         }
