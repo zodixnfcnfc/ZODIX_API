@@ -31,8 +31,6 @@ export default async function handler(req, res) {
     let rowIndex = -1;
     let person = null;
 
-    /* 🔎 BUSCAR PERSONA A */
-
     for (let i = 1; i < rows.length; i++) {
 
       const orderId = rows[i][0] || "";
@@ -42,31 +40,21 @@ export default async function handler(req, res) {
         rowIndex = i + 1;
 
         person = {
-
           name: rows[i][4] || "",
           birth_date: rows[i][5] || "",
           birth_hour: rows[i][6] || "",
           birth_place: rows[i][7] || "",
-
           sun: rows[i][8] || "",
           moon: rows[i][9] || "",
           rising: rows[i][10] || "",
-
           message_daily: rows[i][12] || "",
           message_date: rows[i][13] || "",
-
           affinity_daily: rows[i][14] || "",
-          affinity_date: rows[i][15] || "",
-
-          pair_message: rows[i][17] || "",
-          pair_date: rows[i][18] || ""
-
+          affinity_date: rows[i][15] || ""
         };
 
         break;
-
       }
-
     }
 
     if (!person) {
@@ -85,40 +73,13 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔗 CONEXIÓN */
+    /* 🔗 CONEXIÓN ENTRE DOS PULSERAS */
 
     if (type === "pair") {
 
-      /* 🔎 SOLO LEER */
-
       if (!other) {
-
-        if (
-          person.pair_message &&
-          person.pair_date === today
-        ) {
-
-          return res.status(200).json({
-            choices: [{
-              message: {
-                content: person.pair_message
-              }
-            }]
-          });
-
-        }
-
-        return res.status(200).json({
-          choices: [{
-            message: {
-              content: "No hay conexión activa aún."
-            }
-          }]
-        });
-
+        return res.status(400).json({ error: "Missing second UID" });
       }
-
-      /* 🔎 BUSCAR PERSONA B */
 
       let personB = null;
       let rowIndexB = -1;
@@ -132,27 +93,29 @@ export default async function handler(req, res) {
           rowIndexB = i + 1;
 
           personB = {
-
             name: rows[i][4] || "",
             sun: rows[i][8] || "",
             moon: rows[i][9] || "",
-            rising: rows[i][10] || ""
-
+            rising: rows[i][10] || "",
+            pair_message: rows[i][17] || "",
+            pair_date: rows[i][18] || ""
           };
 
           break;
-
         }
-
       }
 
       if (!personB) {
-        return res.status(404).json({
-          error: "Second person not found"
-        });
+        return res.status(404).json({ error: "Second person not found" });
       }
 
-      /* 🎲 GENERAR */
+      if (personB.pair_date === today && personB.pair_message) {
+
+        return res.status(200).json({
+          choices: [{ message: { content: personB.pair_message } }]
+        });
+
+      }
 
       const idsOrdenados =
         [uid, other].sort().join("");
@@ -164,18 +127,18 @@ export default async function handler(req, res) {
       let hash = 0;
 
       for (let i = 0; i < seed.length; i++) {
-
-        hash =
-          seed.charCodeAt(i) +
-          ((hash << 5) - hash);
-
+        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
       }
 
       const percentage =
         30 + Math.abs(hash % 71);
 
+      /* 🔧 PROMPT MEJORADO (CORTO Y DIRECTO) */
+
       const prompt = `
 Genera un mensaje corto y claro entre dos personas.
+
+FORMATO EXACTO:
 
 ${person.name} (${person.sun})
 
@@ -185,13 +148,19 @@ ${personB.name} (${personB.sun})
 
 🔗 Conexión energética hoy: ${percentage}%
 
-✨ Una frase clara.
+✨ Una frase clara sobre cómo se llevan hoy.
 
-🔥 Una recomendación.
+🔥 Una recomendación simple para hoy.
 
-💫 Frase positiva.
+💫 Una frase positiva final.
 
 Fecha: ${todayFormatted}
+
+IMPORTANTE:
+- Frases cortas
+- Lenguaje claro
+- No místico
+- Fácil de leer
 `;
 
       const response = await fetch(
@@ -200,65 +169,153 @@ Fecha: ${todayFormatted}
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization":
-              `Bearer ${process.env.OPENAI_API_KEY}`
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
             model: "gpt-4.1-mini",
-            messages: [
-              { role: "user", content: prompt }
-            ]
+            messages: [{ role: "user", content: prompt }]
           })
         }
       );
 
       const data = await response.json();
-
-      const message =
-        data.choices[0].message.content;
-
-      /* 💾 GUARDAR EN B */
+      const message = data.choices[0].message.content;
 
       await sheets.spreadsheets.values.update({
-
         spreadsheetId: sheetId,
-
         range: `R${rowIndexB}:S${rowIndexB}`,
-
         valueInputOption: "RAW",
-
         requestBody: {
           values: [[message, today]]
         }
-
-      });
-
-      /* 💾 GUARDAR TAMBIÉN EN A */
-
-      await sheets.spreadsheets.values.update({
-
-        spreadsheetId: sheetId,
-
-        range: `R${rowIndex}:S${rowIndex}`,
-
-        valueInputOption: "RAW",
-
-        requestBody: {
-          values: [[message, today]]
-        }
-
       });
 
       return res.status(200).json({
-
-        choices: [{
-          message: {
-            content: message
-          }
-        }]
-
+        choices: [{ message: { content: message } }]
       });
 
+    }
+
+    /* ⚡ ENERGÍA — SIN CAMBIOS */
+
+    if (type !== "affinity") {
+
+      if (person.message_date === today && person.message_daily) {
+        return res.status(200).json({
+          choices: [{ message: { content: person.message_daily } }]
+        });
+      }
+
+      const prompt = `
+Genera un mensaje diario de energía emocional.
+
+Hola ${person.name},
+
+Hoy, ${todayFormatted}
+
+✨ Frase potente.
+
+🔥 Acción concreta.
+
+💫 Frase final.
+
+DATOS:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
+`;
+
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [{ role: "user", content: prompt }]
+          })
+        }
+      );
+
+      const data = await response.json();
+      const message = data.choices[0].message.content;
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `M${rowIndex}:N${rowIndex}`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [[message, today]]
+        }
+      });
+
+      return res.status(200).json({
+        choices: [{ message: { content: message } }]
+      });
+    }
+
+    /* 💫 AFINIDAD — SIN CAMBIOS */
+
+    if (type === "affinity") {
+
+      if (person.affinity_date === today && person.affinity_daily) {
+        return res.status(200).json({
+          choices: [{ message: { content: person.affinity_daily } }]
+        });
+      }
+
+      const prompt = `
+Escribe una afinidad diaria.
+
+🔥 Signo positivo
+
+💫 Signo fluido
+
+⚡ Signo intenso
+
+⚠️ Evita signo
+
+💡 Consejo final
+
+DATOS:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
+`;
+
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [{ role: "user", content: prompt }]
+          })
+        }
+      );
+
+      const data = await response.json();
+      const message = data.choices[0].message.content;
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `O${rowIndex}:P${rowIndex}`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [[message, today]]
+        }
+      });
+
+      return res.status(200).json({
+        choices: [{ message: { content: message } }]
+      });
     }
 
   } catch (error) {
