@@ -74,7 +74,7 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔗 NUEVO: COMPATIBILIDAD ENTRE DOS PERSONAS */
+    /* 🔗 COMPATIBILIDAD ENTRE DOS PERSONAS */
 
     if (type === "pair") {
 
@@ -105,6 +105,22 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
+      /* 🎯 PORCENTAJE VARIABLE DIARIO */
+
+      const seed =
+        uid +
+        other +
+        today;
+
+      let hash = 0;
+
+      for (let i = 0; i < seed.length; i++) {
+        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+      }
+
+      const percentage =
+        65 + Math.abs(hash % 31); // 65% a 95%
+
       const prompt = `
 Genera una compatibilidad astral entre dos personas.
 
@@ -114,7 +130,7 @@ ${person.name} (${person.sun})
 +
 ${personB.name} (${personB.sun})
 
-Afinidad hoy: [porcentaje entre 65% y 95%]%
+Afinidad hoy: ${percentage}%
 
 💬 [mensaje emocional breve]
 
@@ -131,17 +147,20 @@ Luna: ${personB.moon}
 Ascendente: ${personB.rising}
 `;
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [{ role: "user", content: prompt }]
+          })
+        }
+      );
 
       const data = await response.json();
       const message = data.choices[0].message.content;
@@ -217,17 +236,20 @@ Luna: ${person.moon}
 Ascendente: ${person.rising}
 `;
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [{ role: "user", content: prompt }]
+          })
+        }
+      );
 
       const data = await response.json();
       const message = data.choices[0].message.content;
@@ -287,17 +309,20 @@ Luna: ${person.moon}
 Ascendente: ${person.rising}
 `;
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [{ role: "user", content: prompt }]
+          })
+        }
+      );
 
       const data = await response.json();
       const message = data.choices[0].message.content;
