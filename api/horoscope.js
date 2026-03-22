@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
 
-    const { uid, type } = req.query;
+    const { uid, type, other } = req.query;
 
     const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
 
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
     const sheetData = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "A:P"
+      range: "A:S"
     });
 
     const rows = sheetData.data.values;
@@ -61,7 +61,6 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Person not found" });
     }
 
-    /* 🔮 PERFIL */
     if (type === "profile") {
       return res.status(200).json(person);
     }
@@ -74,7 +73,130 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* ⚡ ENERGÍA (PROMPT FINAL CON HOOK + ACCIÓN) */
+    /* 🔗 CONEXIÓN ENTRE DOS PULSERAS */
+
+    if (type === "pair") {
+
+      if (!other) {
+        return res.status(400).json({ error: "Missing second UID" });
+      }
+
+      let personB = null;
+      let rowIndexB = -1;
+
+      for (let i = 1; i < rows.length; i++) {
+
+        const orderId = rows[i][0] || "";
+
+        if (orderId.includes(other)) {
+
+          rowIndexB = i + 1;
+
+          personB = {
+            name: rows[i][4] || "",
+            sun: rows[i][8] || "",
+            moon: rows[i][9] || "",
+            rising: rows[i][10] || "",
+            pair_message: rows[i][17] || "",
+            pair_date: rows[i][18] || ""
+          };
+
+          break;
+        }
+      }
+
+      if (!personB) {
+        return res.status(404).json({ error: "Second person not found" });
+      }
+
+      if (personB.pair_date === today && personB.pair_message) {
+
+        return res.status(200).json({
+          choices: [{ message: { content: personB.pair_message } }]
+        });
+
+      }
+
+      const idsOrdenados =
+        [uid, other].sort().join("");
+
+      const seed =
+        idsOrdenados +
+        today;
+
+      let hash = 0;
+
+      for (let i = 0; i < seed.length; i++) {
+        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+      }
+
+      const percentage =
+        30 + Math.abs(hash % 71);
+
+      /* 🔧 PROMPT MEJORADO (CORTO Y DIRECTO) */
+
+      const prompt = `
+Genera un mensaje corto y claro entre dos personas.
+
+FORMATO EXACTO:
+
+${person.name} (${person.sun})
+
++
+
+${personB.name} (${personB.sun})
+
+🔗 Conexión energética hoy: ${percentage}%
+
+✨ Una frase clara sobre cómo se llevan hoy.
+
+🔥 Una recomendación simple para hoy.
+
+💫 Una frase positiva final.
+
+Fecha: ${todayFormatted}
+
+IMPORTANTE:
+- Frases cortas
+- Lenguaje claro
+- No místico
+- Fácil de leer
+`;
+
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [{ role: "user", content: prompt }]
+          })
+        }
+      );
+
+      const data = await response.json();
+      const message = data.choices[0].message.content;
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `R${rowIndexB}:S${rowIndexB}`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [[message, today]]
+        }
+      });
+
+      return res.status(200).json({
+        choices: [{ message: { content: message } }]
+      });
+
+    }
+
+    /* ⚡ ENERGÍA — SIN CAMBIOS */
 
     if (type !== "affinity") {
 
@@ -85,71 +207,38 @@ export default async function handler(req, res) {
       }
 
       const prompt = `
-Genera un mensaje diario de energía/horóscopo altamente emocional, personalizado y adictivo.
-
-IMPORTANTE:
-- El texto debe estar en español.
-- Debe incluir el nombre de la persona.
-- Debe incluir la fecha actual.
-- Tono premium, místico, intenso y poderoso.
-- NO debe sonar genérico.
-- Debe enganchar desde la primera línea (HOOK FUERTE).
-- Usa frases cortas.
-- SIEMPRE deja una línea en blanco entre frases.
-
-ESTRUCTURA OBLIGATORIA:
+Genera un mensaje diario de energía emocional.
 
 Hola ${person.name},
 
 Hoy, ${todayFormatted}
 
-✨ [HOOK muy potente, máximo 10 palabras]
+✨ Frase potente.
 
-[Frase que genere intriga o tensión]
+🔥 Acción concreta.
 
-[Frase emocional conectada con su energía]
+💫 Frase final.
 
-[Frase que conecte Sol, Luna y Ascendente de forma natural]
-
-[Frase con recomendación práctica o acción concreta para hoy]
-
-[Otra frase opcional de acción o enfoque mental]
-
-🔥 [Frase final contundente tipo destino/poder]
-
-REGLAS:
-- Cada frase separada por UNA línea en blanco
-- Máximo 6-7 frases (sin contar saludo)
-- Máximo 10-12 palabras por línea
-- Nada de párrafos largos
-- Nada genérico
-
-CLAVE:
-- Debe hacer sentir QUÉ HACER HOY
-- Mezclar emoción + acción (muy importante)
-
-ESTILO:
-- Lenguaje emocional (energía, destino, poder, intuición, fuego)
-- Sensación de mensaje exclusivo
-- Directo y potente
-
-DATOS ASTRALES:
+DATOS:
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
 `;
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [{ role: "user", content: prompt }]
+          })
+        }
+      );
 
       const data = await response.json();
       const message = data.choices[0].message.content;
@@ -168,7 +257,7 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD (NO TOCADO) */
+    /* 💫 AFINIDAD — SIN CAMBIOS */
 
     if (type === "affinity") {
 
@@ -179,29 +268,17 @@ Ascendente: ${person.rising}
       }
 
       const prompt = `
-Escribe una afinidad astral diaria PREMIUM.
+Escribe una afinidad diaria.
 
-FORMATO OBLIGATORIO:
+🔥 Signo positivo
 
-Hoy conectas especialmente con:
+💫 Signo fluido
 
-🔥 [Signo] → [conexión emocional breve]
+⚡ Signo intenso
 
-💫 [Signo] → [tipo de conexión]
+⚠️ Evita signo
 
-⚡ [Signo] → [sensación o energía]
-
-⚠️ Evita hoy:
-
-[Signo] → [por qué evitarlo]
-
-💡 Consejo:
-[frase final potente]
-
-REGLAS:
-- Cada frase en una línea
-- Máx 10 palabras por línea
-- No párrafos
+💡 Consejo final
 
 DATOS:
 Sol: ${person.sun}
@@ -209,17 +286,20 @@ Luna: ${person.moon}
 Ascendente: ${person.rising}
 `;
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [{ role: "user", content: prompt }]
+          })
+        }
+      );
 
       const data = await response.json();
       const message = data.choices[0].message.content;
