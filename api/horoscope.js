@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
     const sheetData = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "A:P"
+      range: "A:S"
     });
 
     const rows = sheetData.data.values;
@@ -84,6 +84,7 @@ export default async function handler(req, res) {
       }
 
       let personB = null;
+      let rowIndexB = -1;
 
       for (let i = 1; i < rows.length; i++) {
 
@@ -91,11 +92,15 @@ export default async function handler(req, res) {
 
         if (orderId.includes(other)) {
 
+          rowIndexB = i + 1;
+
           personB = {
             name: rows[i][4] || "",
             sun: rows[i][8] || "",
             moon: rows[i][9] || "",
-            rising: rows[i][10] || ""
+            rising: rows[i][10] || "",
+            pair_message: rows[i][17] || "", // R
+            pair_date: rows[i][18] || ""     // S
           };
 
           break;
@@ -106,11 +111,23 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
-      /* 🎯 PORCENTAJE VARIABLE DIARIO */
+      /* SI YA EXISTE MENSAJE HOY */
+
+      if (personB.pair_date === today && personB.pair_message) {
+
+        return res.status(200).json({
+          choices: [{ message: { content: personB.pair_message } }]
+        });
+
+      }
+
+      /* 🎯 PORCENTAJE FIJO POR DÍA */
+
+      const idsOrdenados =
+        [uid, other].sort().join("");
 
       const seed =
-        uid +
-        other +
+        idsOrdenados +
         today;
 
       let hash = 0;
@@ -120,42 +137,37 @@ export default async function handler(req, res) {
       }
 
       const percentage =
-        30 + Math.abs(hash % 71); // 30% a 100%
+        30 + Math.abs(hash % 71); // 30–100%
 
-      /* 🔮 PROMPT PREMIUM ZODIX */
+      /* PROMPT */
 
       const prompt = `
 Genera una conexión energética diaria entre dos pulseras ZODIX.
 
-IMPORTANTE:
-- Español
-- Tono místico, emocional y poderoso
-- Muy breve
-- Adictivo
-- Debe parecer exclusivo
-
-FORMATO OBLIGATORIO:
+FORMATO:
 
 ${person.name} (${person.sun})
+
 +
+
 ${personB.name} (${personB.sun})
 
 🔗 Conexión energética hoy: ${percentage}%
 
-✨ [Describe cómo se sienten sus energías hoy]
+✨ Describe cómo se sienten hoy.
 
-🔥 [Acción o recomendación concreta para hoy]
+🔥 Da una acción concreta para hoy.
 
-💫 [Frase final emocional potente]
+💫 Frase final emocional potente.
 
 Fecha: ${todayFormatted}
 
-DATOS PERSONA A:
+DATOS A:
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
 
-DATOS PERSONA B:
+DATOS B:
 Sol: ${personB.sun}
 Luna: ${personB.moon}
 Ascendente: ${personB.rising}
@@ -179,6 +191,17 @@ Ascendente: ${personB.rising}
       const data = await response.json();
       const message = data.choices[0].message.content;
 
+      /* GUARDAR EN R y S */
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `R${rowIndexB}:S${rowIndexB}`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [[message, today]]
+        }
+      });
+
       return res.status(200).json({
         choices: [{ message: { content: message } }]
       });
@@ -196,23 +219,19 @@ Ascendente: ${personB.rising}
       }
 
       const prompt = `
-Genera un mensaje diario de energía/horóscopo altamente emocional.
+Genera un mensaje diario de energía emocional.
 
 Hola ${person.name},
 
 Hoy, ${todayFormatted}
 
-✨ [HOOK potente]
+✨ Frase potente.
 
-[Frase emocional]
+🔥 Acción concreta.
 
-[Frase conectando Sol, Luna y Ascendente]
+💫 Frase final.
 
-[Acción concreta para hoy]
-
-🔥 [Frase final poderosa]
-
-DATOS ASTRALES:
+DATOS:
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
@@ -261,22 +280,17 @@ Ascendente: ${person.rising}
       }
 
       const prompt = `
-Escribe una afinidad astral diaria PREMIUM.
+Escribe una afinidad diaria.
 
-FORMATO:
+🔥 Signo positivo
 
-🔥 [Signo] → conexión fuerte
+💫 Signo fluido
 
-💫 [Signo] → energía fluida
+⚡ Signo intenso
 
-⚡ [Signo] → emoción intensa
+⚠️ Evita signo
 
-⚠️ Evita:
-
-[Signo] → motivo
-
-💡 Consejo:
-[Frase final]
+💡 Consejo final
 
 DATOS:
 Sol: ${person.sun}
