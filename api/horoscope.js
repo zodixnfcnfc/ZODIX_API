@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
 
-    const { uid, type } = req.query;
+    const { uid, type, other } = req.query;
 
     const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
 
@@ -74,7 +74,85 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* ⚡ ENERGÍA (PROMPT FINAL CON HOOK + ACCIÓN) */
+    /* 🔗 NUEVO: COMPATIBILIDAD ENTRE DOS PERSONAS */
+
+    if (type === "pair") {
+
+      if (!other) {
+        return res.status(400).json({ error: "Missing second UID" });
+      }
+
+      let personB = null;
+
+      for (let i = 1; i < rows.length; i++) {
+
+        const orderId = rows[i][0] || "";
+
+        if (orderId.includes(other)) {
+
+          personB = {
+            name: rows[i][4] || "",
+            sun: rows[i][8] || "",
+            moon: rows[i][9] || "",
+            rising: rows[i][10] || ""
+          };
+
+          break;
+        }
+      }
+
+      if (!personB) {
+        return res.status(404).json({ error: "Second person not found" });
+      }
+
+      const prompt = `
+Genera una compatibilidad astral entre dos personas.
+
+Formato obligatorio:
+
+${person.name} (${person.sun})
++
+${personB.name} (${personB.sun})
+
+Afinidad hoy: [porcentaje entre 65% y 95%]%
+
+💬 [mensaje emocional breve]
+
+Fecha: ${todayFormatted}
+
+DATOS PERSONA A:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
+
+DATOS PERSONA B:
+Sol: ${personB.sun}
+Luna: ${personB.moon}
+Ascendente: ${personB.rising}
+`;
+
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+
+      const data = await response.json();
+      const message = data.choices[0].message.content;
+
+      return res.status(200).json({
+        choices: [{ message: { content: message } }]
+      });
+
+    }
+
+    /* ⚡ ENERGÍA (SIN CAMBIOS) */
 
     if (type !== "affinity") {
 
@@ -120,7 +198,7 @@ Hoy, ${todayFormatted}
 REGLAS:
 - Cada frase separada por UNA línea en blanco
 - Máximo 6-7 frases (sin contar saludo)
-- Máximo 10-12 palabras por línea
+- Máximo 10-12 frases por línea
 - Nada de párrafos largos
 - Nada genérico
 
@@ -168,7 +246,7 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD (NO TOCADO) */
+    /* 💫 AFINIDAD (SIN CAMBIOS) */
 
     if (type === "affinity") {
 
