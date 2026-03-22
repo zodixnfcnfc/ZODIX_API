@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Person not found" });
     }
 
-    /* 🔮 PERFIL */
+    /* PERFIL */
 
     if (type === "profile") {
       return res.status(200).json(person);
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔗 CONEXIÓN ENTRE DOS PULSERAS */
+    /* 🔗 CONEXIÓN ENTRE DOS */
 
     if (type === "pair") {
 
@@ -99,8 +99,8 @@ export default async function handler(req, res) {
             sun: rows[i][8] || "",
             moon: rows[i][9] || "",
             rising: rows[i][10] || "",
-            pair_message: rows[i][17] || "", // R
-            pair_date: rows[i][18] || ""     // S
+            pair_message: rows[i][17] || "",
+            pair_date: rows[i][18] || ""
           };
 
           break;
@@ -121,7 +121,7 @@ export default async function handler(req, res) {
 
       }
 
-      /* 🎯 PORCENTAJE FIJO POR DÍA */
+      /* PORCENTAJE */
 
       const idsOrdenados =
         [uid, other].sort().join("");
@@ -137,19 +137,12 @@ export default async function handler(req, res) {
       }
 
       const percentage =
-        30 + Math.abs(hash % 71); // 30–100%
+        30 + Math.abs(hash % 71);
 
-      /* 🔧 PROMPT NUEVO — MÁS DIRECTO */
+      /* PROMPT SIMPLE Y SEGURO */
 
       const prompt = `
-Genera un mensaje corto y claro de conexión diaria entre dos personas.
-
-IMPORTANTE:
-- Español
-- Lenguaje claro
-- Nada místico
-- Máximo 3 frases
-- Muy fácil de leer
+Genera un mensaje corto y claro entre dos personas.
 
 FORMATO EXACTO:
 
@@ -159,22 +152,15 @@ ${person.name} (${person.sun})
 
 ${personB.name} (${personB.sun})
 
-🔗 Conexión hoy: ${percentage}%
+🔗 Conexión energética hoy: ${percentage}%
 
-✨ Una frase clara sobre cómo se llevan hoy.
+✨ Una frase clara sobre su relación hoy.
 
-🔥 Una recomendación práctica sencilla.
+🔥 Una recomendación práctica simple.
 
-💫 Una frase final corta y positiva.
+💫 Una frase final positiva.
 
 Fecha: ${todayFormatted}
-
-REGLAS:
-- Frases cortas
-- Máximo 8 palabras por línea
-- Nada abstracto
-- Nada espiritual
-- Nada largo
 `;
 
       const response = await fetch(
@@ -183,7 +169,7 @@ REGLAS:
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+            "Authorization": \`Bearer \${process.env.OPENAI_API_KEY}\`
           },
           body: JSON.stringify({
             model: "gpt-4.1-mini",
@@ -193,13 +179,16 @@ REGLAS:
       );
 
       const data = await response.json();
-      const message = data.choices[0].message.content;
 
-      /* GUARDAR EN R y S */
+      const message =
+        data?.choices?.[0]?.message?.content
+        || "🔗 Conexión estable hoy.";
+
+      /* GUARDAR */
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
-        range: `R${rowIndexB}:S${rowIndexB}`,
+        range: \`R\${rowIndexB}:S\${rowIndexB}\`,
         valueInputOption: "RAW",
         requestBody: {
           values: [[message, today]]
@@ -223,17 +212,17 @@ REGLAS:
       }
 
       const prompt = `
-Genera un mensaje diario de energía emocional.
+Genera un mensaje diario de energía.
 
 Hola ${person.name},
 
 Hoy, ${todayFormatted}
 
-✨ Frase potente.
+✨ Una frase motivadora.
 
-🔥 Acción concreta.
+🔥 Una acción práctica.
 
-💫 Frase final.
+💫 Una frase final positiva.
 
 DATOS:
 Sol: ${person.sun}
@@ -247,7 +236,7 @@ Ascendente: ${person.rising}
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+            "Authorization": \`Bearer \${process.env.OPENAI_API_KEY}\`
           },
           body: JSON.stringify({
             model: "gpt-4.1-mini",
@@ -257,11 +246,14 @@ Ascendente: ${person.rising}
       );
 
       const data = await response.json();
-      const message = data.choices[0].message.content;
+
+      const message =
+        data?.choices?.[0]?.message?.content
+        || "✨ Energía estable hoy.";
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
-        range: `M${rowIndex}:N${rowIndex}`,
+        range: \`M\${rowIndex}:N\${rowIndex}\`,
         valueInputOption: "RAW",
         requestBody: {
           values: [[message, today]]
@@ -284,22 +276,17 @@ Ascendente: ${person.rising}
       }
 
       const prompt = `
-Escribe una afinidad diaria.
+Escribe una afinidad diaria breve.
 
 🔥 Signo positivo
 
-💫 Signo fluido
+💫 Signo compatible
 
 ⚡ Signo intenso
 
 ⚠️ Evita signo
 
 💡 Consejo final
-
-DATOS:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
 `;
 
       const response = await fetch(
@@ -308,7 +295,7 @@ Ascendente: ${person.rising}
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+            "Authorization": \`Bearer \${process.env.OPENAI_API_KEY}\`
           },
           body: JSON.stringify({
             model: "gpt-4.1-mini",
@@ -318,11 +305,14 @@ Ascendente: ${person.rising}
       );
 
       const data = await response.json();
-      const message = data.choices[0].message.content;
+
+      const message =
+        data?.choices?.[0]?.message?.content
+        || "💫 Afinidad estable hoy.";
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
-        range: `O${rowIndex}:P${rowIndex}`,
+        range: \`O\${rowIndex}:P\${rowIndex}\`,
         valueInputOption: "RAW",
         requestBody: {
           values: [[message, today]]
@@ -336,18 +326,9 @@ Ascendente: ${person.rising}
 
   } catch (error) {
 
-    res.status(500).json({
-      error: "server_error",
-      message: error.toString()
-    });
+    console.error(error);
 
-  }
-
-}
-
-  } catch (error) {
-
-    res.status(500).json({
+    return res.status(500).json({
       error: "server_error",
       message: error.toString()
     });
