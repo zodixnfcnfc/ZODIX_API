@@ -61,6 +61,8 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Person not found" });
     }
 
+    /* 🔮 PERFIL */
+
     if (type === "profile") {
       return res.status(200).json(person);
     }
@@ -109,6 +111,8 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
+      /* SI YA EXISTE MENSAJE HOY */
+
       if (personB.pair_date === today && personB.pair_message) {
 
         return res.status(200).json({
@@ -117,7 +121,7 @@ export default async function handler(req, res) {
 
       }
 
-      /* 🎯 PORCENTAJE */
+      /* 🎯 PORCENTAJE FIJO POR DÍA */
 
       const idsOrdenados =
         [uid, other].sort().join("");
@@ -135,26 +139,27 @@ export default async function handler(req, res) {
       const percentage =
         30 + Math.abs(hash % 71);
 
-      /* 🆕 PROMPT ESTILO IMAGEN */
+      /* 🆕 SOLO CAMBIADO ESTE PROMPT */
 
       const prompt = `
 Genera una afinidad entre dos personas.
 
 MUY IMPORTANTE:
-- Mantén exactamente este formato
-- Frases cortas
-- Fácil lectura en móvil
-- Máximo 3 frases cortas
+- Mantener exactamente este formato
+- Frases muy cortas
+- Máximo 3 frases
+- Texto elegante
+- Fácil de leer en móvil
 
 FORMATO EXACTO:
 
 ✨ Afinidad Detectada
 
-${person.name.toUpperCase()} (${person.sun})
+${person.name.toUpperCase()} (${person.sun.toUpperCase()})
 
 +
 
-${personB.name.toUpperCase()} (${personB.sun})
+${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})
 
 🔗 Conexión energética hoy:
 ${percentage}%
@@ -188,7 +193,7 @@ Ascendente: ${personB.rising}
           },
           body: JSON.stringify({
             model: "gpt-4.1-mini",
-            max_tokens: 150,
+            max_tokens: 140,
             temperature: 0.7,
             messages: [{ role: "user", content: prompt }]
           })
@@ -197,6 +202,8 @@ Ascendente: ${personB.rising}
 
       const data = await response.json();
       const message = data.choices[0].message.content;
+
+      /* GUARDAR EN R y S */
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
@@ -213,7 +220,7 @@ Ascendente: ${personB.rising}
 
     }
 
-    /* ⚡ RESTO SIN CAMBIOS */
+    /* ⚡ ENERGÍA */
 
     if (type !== "affinity") {
 
@@ -263,6 +270,67 @@ Ascendente: ${person.rising}
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `M${rowIndex}:N${rowIndex}`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [[message, today]]
+        }
+      });
+
+      return res.status(200).json({
+        choices: [{ message: { content: message } }]
+      });
+    }
+
+    /* 💫 AFINIDAD */
+
+    if (type === "affinity") {
+
+      if (person.affinity_date === today && person.affinity_daily) {
+        return res.status(200).json({
+          choices: [{ message: { content: person.affinity_daily } }]
+        });
+      }
+
+      const prompt = `
+Escribe una afinidad diaria.
+
+🔥 Signo positivo
+
+💫 Signo fluido
+
+⚡ Signo intenso
+
+⚠️ Evita signo
+
+💡 Consejo final
+
+DATOS:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
+`;
+
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [{ role: "user", content: prompt }]
+          })
+        }
+      );
+
+      const data = await response.json();
+      const message = data.choices[0].message.content;
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `O${rowIndex}:P${rowIndex}`,
         valueInputOption: "RAW",
         requestBody: {
           values: [[message, today]]
