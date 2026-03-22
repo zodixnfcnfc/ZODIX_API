@@ -139,12 +139,19 @@ export default async function handler(req, res) {
       const percentage =
         30 + Math.abs(hash % 71); // 30–100%
 
-      /* PROMPT */
+      /* 🔧 PROMPT NUEVO — MÁS DIRECTO */
 
       const prompt = `
-Genera una conexión energética diaria entre dos pulseras ZODIX.
+Genera un mensaje corto y claro de conexión diaria entre dos personas.
 
-FORMATO:
+IMPORTANTE:
+- Español
+- Lenguaje claro
+- Nada místico
+- Máximo 3 frases
+- Muy fácil de leer
+
+FORMATO EXACTO:
 
 ${person.name} (${person.sun})
 
@@ -152,25 +159,22 @@ ${person.name} (${person.sun})
 
 ${personB.name} (${personB.sun})
 
-🔗 Conexión energética hoy: ${percentage}%
+🔗 Conexión hoy: ${percentage}%
 
-✨ Describe cómo se sienten hoy.
+✨ Una frase clara sobre cómo se llevan hoy.
 
-🔥 Da una acción concreta para hoy.
+🔥 Una recomendación práctica sencilla.
 
-💫 Frase final emocional potente.
+💫 Una frase final corta y positiva.
 
 Fecha: ${todayFormatted}
 
-DATOS A:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-
-DATOS B:
-Sol: ${personB.sun}
-Luna: ${personB.moon}
-Ascendente: ${personB.rising}
+REGLAS:
+- Frases cortas
+- Máximo 8 palabras por línea
+- Nada abstracto
+- Nada espiritual
+- Nada largo
 `;
 
       const response = await fetch(
@@ -329,6 +333,17 @@ Ascendente: ${person.rising}
         choices: [{ message: { content: message } }]
       });
     }
+
+  } catch (error) {
+
+    res.status(500).json({
+      error: "server_error",
+      message: error.toString()
+    });
+
+  }
+
+}
 
   } catch (error) {
 
