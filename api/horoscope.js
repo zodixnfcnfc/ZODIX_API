@@ -35,7 +35,7 @@ export default async function handler(req, res) {
 
       const orderId = rows[i][0] || "";
 
-      if (orderId.includes(uid)) {
+      if (orderId.trim() === uid.trim()) {
 
         rowIndex = i + 1;
 
@@ -50,7 +50,9 @@ export default async function handler(req, res) {
           message_daily: rows[i][12] || "",
           message_date: rows[i][13] || "",
           affinity_daily: rows[i][14] || "",
-          affinity_date: rows[i][15] || ""
+          affinity_date: rows[i][15] || "",
+          pair_message: rows[i][17] || "",
+          pair_date: rows[i][18] || ""
         };
 
         break;
@@ -88,7 +90,7 @@ export default async function handler(req, res) {
 
         const orderId = rows[i][0] || "";
 
-        if (orderId.includes(other)) {
+        if (orderId.trim() === other.trim()) {
 
           rowIndexB = i + 1;
 
@@ -108,6 +110,18 @@ export default async function handler(req, res) {
       if (!personB) {
         return res.status(404).json({ error: "Second person not found" });
       }
+
+      /* Si ya existe mensaje en A */
+
+      if (person.pair_date === today && person.pair_message) {
+
+        return res.status(200).json({
+          choices: [{ message: { content: person.pair_message } }]
+        });
+
+      }
+
+      /* Si ya existe mensaje en B */
 
       if (personB.pair_date === today && personB.pair_message) {
 
@@ -132,8 +146,6 @@ export default async function handler(req, res) {
 
       const percentage =
         30 + Math.abs(hash % 71);
-
-      /* 🔧 PROMPT MEJORADO (CORTO Y DIRECTO) */
 
       const prompt = `
 Genera un mensaje corto y claro entre dos personas.
@@ -181,9 +193,22 @@ IMPORTANTE:
       const data = await response.json();
       const message = data.choices[0].message.content;
 
+      /* Guardar en persona B */
+
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `R${rowIndexB}:S${rowIndexB}`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [[message, today]]
+        }
+      });
+
+      /* Guardar también en persona A */
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `R${rowIndex}:S${rowIndex}`,
         valueInputOption: "RAW",
         requestBody: {
           values: [[message, today]]
@@ -196,7 +221,7 @@ IMPORTANTE:
 
     }
 
-    /* ⚡ ENERGÍA — SIN CAMBIOS */
+    /* ⚡ ENERGÍA */
 
     if (type !== "affinity") {
 
@@ -257,7 +282,7 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD — SIN CAMBIOS */
+    /* 💫 AFINIDAD */
 
     if (type === "affinity") {
 
