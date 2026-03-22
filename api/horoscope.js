@@ -62,6 +62,7 @@ export default async function handler(req, res) {
     }
 
     /* 🔮 PERFIL */
+
     if (type === "profile") {
       return res.status(200).json(person);
     }
@@ -74,7 +75,7 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔗 COMPATIBILIDAD ENTRE DOS PERSONAS */
+    /* 🔗 CONEXIÓN ENTRE DOS PULSERAS */
 
     if (type === "pair") {
 
@@ -119,20 +120,33 @@ export default async function handler(req, res) {
       }
 
       const percentage =
-        65 + Math.abs(hash % 31); // 65% a 95%
+        30 + Math.abs(hash % 71); // 30% a 100%
+
+      /* 🔮 PROMPT PREMIUM ZODIX */
 
       const prompt = `
-Genera una compatibilidad astral entre dos personas.
+Genera una conexión energética diaria entre dos pulseras ZODIX.
 
-Formato obligatorio:
+IMPORTANTE:
+- Español
+- Tono místico, emocional y poderoso
+- Muy breve
+- Adictivo
+- Debe parecer exclusivo
+
+FORMATO OBLIGATORIO:
 
 ${person.name} (${person.sun})
 +
 ${personB.name} (${personB.sun})
 
-Afinidad hoy: ${percentage}%
+🔗 Conexión energética hoy: ${percentage}%
 
-💬 [mensaje emocional breve]
+✨ [Describe cómo se sienten sus energías hoy]
+
+🔥 [Acción o recomendación concreta para hoy]
+
+💫 [Frase final emocional potente]
 
 Fecha: ${todayFormatted}
 
@@ -171,7 +185,7 @@ Ascendente: ${personB.rising}
 
     }
 
-    /* ⚡ ENERGÍA (SIN CAMBIOS) */
+    /* ⚡ ENERGÍA */
 
     if (type !== "affinity") {
 
@@ -182,53 +196,21 @@ Ascendente: ${personB.rising}
       }
 
       const prompt = `
-Genera un mensaje diario de energía/horóscopo altamente emocional, personalizado y adictivo.
-
-IMPORTANTE:
-- El texto debe estar en español.
-- Debe incluir el nombre de la persona.
-- Debe incluir la fecha actual.
-- Tono premium, místico, intenso y poderoso.
-- NO debe sonar genérico.
-- Debe enganchar desde la primera línea (HOOK FUERTE).
-- Usa frases cortas.
-- SIEMPRE deja una línea en blanco entre frases.
-
-ESTRUCTURA OBLIGATORIA:
+Genera un mensaje diario de energía/horóscopo altamente emocional.
 
 Hola ${person.name},
 
 Hoy, ${todayFormatted}
 
-✨ [HOOK muy potente, máximo 10 palabras]
+✨ [HOOK potente]
 
-[Frase que genere intriga o tensión]
+[Frase emocional]
 
-[Frase emocional conectada con su energía]
+[Frase conectando Sol, Luna y Ascendente]
 
-[Frase que conecte Sol, Luna y Ascendente de forma natural]
+[Acción concreta para hoy]
 
-[Frase con recomendación práctica o acción concreta para hoy]
-
-[Otra frase opcional de acción o enfoque mental]
-
-🔥 [Frase final contundente tipo destino/poder]
-
-REGLAS:
-- Cada frase separada por UNA línea en blanco
-- Máximo 6-7 frases (sin contar saludo)
-- Máximo 10-12 frases por línea
-- Nada de párrafos largos
-- Nada genérico
-
-CLAVE:
-- Debe hacer sentir QUÉ HACER HOY
-- Mezclar emoción + acción (muy importante)
-
-ESTILO:
-- Lenguaje emocional (energía, destino, poder, intuición, fuego)
-- Sensación de mensaje exclusivo
-- Directo y potente
+🔥 [Frase final poderosa]
 
 DATOS ASTRALES:
 Sol: ${person.sun}
@@ -268,7 +250,7 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD (SIN CAMBIOS) */
+    /* 💫 AFINIDAD */
 
     if (type === "affinity") {
 
@@ -281,27 +263,20 @@ Ascendente: ${person.rising}
       const prompt = `
 Escribe una afinidad astral diaria PREMIUM.
 
-FORMATO OBLIGATORIO:
+FORMATO:
 
-Hoy conectas especialmente con:
+🔥 [Signo] → conexión fuerte
 
-🔥 [Signo] → [conexión emocional breve]
+💫 [Signo] → energía fluida
 
-💫 [Signo] → [tipo de conexión]
+⚡ [Signo] → emoción intensa
 
-⚡ [Signo] → [sensación o energía]
+⚠️ Evita:
 
-⚠️ Evita hoy:
-
-[Signo] → [por qué evitarlo]
+[Signo] → motivo
 
 💡 Consejo:
-[frase final potente]
-
-REGLAS:
-- Cada frase en una línea
-- Máx 10 palabras por línea
-- No párrafos
+[Frase final]
 
 DATOS:
 Sol: ${person.sun}
