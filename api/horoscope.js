@@ -77,9 +77,36 @@ export default async function handler(req, res) {
 
     if (type === "pair") {
 
+      /* 🧠 NUEVO: SI NO HAY "other" → SOLO LEER */
+
       if (!other) {
-        return res.status(400).json({ error: "Missing second UID" });
+
+        const pairMessage = rows[rowIndex - 1][17] || "";
+        const pairDate = rows[rowIndex - 1][18] || "";
+
+        if (pairMessage && pairDate === today) {
+
+          return res.status(200).json({
+            choices: [{
+              message: {
+                content: pairMessage
+              }
+            }]
+          });
+
+        }
+
+        return res.status(200).json({
+          choices: [{
+            message: {
+              content: "No hay conexión activa aún."
+            }
+          }]
+        });
+
       }
+
+      /* 🔎 BUSCAR SEGUNDA PERSONA */
 
       let personB = null;
       let rowIndexB = -1;
@@ -132,8 +159,6 @@ export default async function handler(req, res) {
 
       const percentage =
         30 + Math.abs(hash % 71);
-
-      /* 🔧 PROMPT MEJORADO (CORTO Y DIRECTO) */
 
       const prompt = `
 Genera un mensaje corto y claro entre dos personas.
