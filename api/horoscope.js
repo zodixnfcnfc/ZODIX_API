@@ -10,7 +10,9 @@ export default async function handler(req, res) {
 
     const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
 
-    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
+    const credentials = JSON.parse(
+      process.env.GOOGLE_SERVICE_ACCOUNT
+    );
 
     const auth = new google.auth.JWT(
       credentials.client_email,
@@ -19,17 +21,23 @@ export default async function handler(req, res) {
       ["https://www.googleapis.com/auth/spreadsheets"]
     );
 
-    const sheets = google.sheets({ version: "v4", auth });
-
-    const sheetData = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: "A:S"
+    const sheets = google.sheets({
+      version: "v4",
+      auth
     });
+
+    const sheetData =
+      await sheets.spreadsheets.values.get({
+        spreadsheetId: sheetId,
+        range: "A:S"
+      });
 
     const rows = sheetData.data.values;
 
     let rowIndex = -1;
     let person = null;
+
+    /* 🔎 BUSCAR PERSONA A */
 
     for (let i = 1; i < rows.length; i++) {
 
@@ -41,16 +49,9 @@ export default async function handler(req, res) {
 
         person = {
           name: rows[i][4] || "",
-          birth_date: rows[i][5] || "",
-          birth_hour: rows[i][6] || "",
-          birth_place: rows[i][7] || "",
           sun: rows[i][8] || "",
           moon: rows[i][9] || "",
-          rising: rows[i][10] || "",
-          message_daily: rows[i][12] || "",
-          message_date: rows[i][13] || "",
-          affinity_daily: rows[i][14] || "",
-          affinity_date: rows[i][15] || ""
+          rising: rows[i][10] || ""
         };
 
         break;
@@ -58,33 +59,39 @@ export default async function handler(req, res) {
     }
 
     if (!person) {
-      return res.status(404).json({ error: "Person not found" });
+      return res.status(404).json({
+        error: "Person not found"
+      });
     }
 
-    if (type === "profile") {
-      return res.status(200).json(person);
-    }
+    const today =
+      new Date().toISOString().split("T")[0];
 
-    const today = new Date().toISOString().split("T")[0];
+    const todayFormatted =
+      new Date().toLocaleDateString("es-ES", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      });
 
-    const todayFormatted = new Date().toLocaleDateString("es-ES", {
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    });
-
-    /* 🔗 CONEXIÓN ENTRE DOS PULSERAS */
+    /* 🔗 CONEXIÓN */
 
     if (type === "pair") {
 
-      /* 🧠 NUEVO: SI NO HAY "other" → SOLO LEER */
+      /* 🧠 SOLO LECTURA */
 
       if (!other) {
 
-        const pairMessage = rows[rowIndex - 1][17] || "";
-        const pairDate = rows[rowIndex - 1][18] || "";
+        const pairMessage =
+          rows[rowIndex - 1][17] || "";
 
-        if (pairMessage && pairDate === today) {
+        const pairDate =
+          rows[rowIndex - 1][18] || "";
+
+        if (
+          pairMessage &&
+          pairDate === today
+        ) {
 
           return res.status(200).json({
             choices: [{
@@ -99,21 +106,23 @@ export default async function handler(req, res) {
         return res.status(200).json({
           choices: [{
             message: {
-              content: "No hay conexión activa aún."
+              content:
+              "No hay conexión activa aún."
             }
           }]
         });
 
       }
 
-      /* 🔎 BUSCAR SEGUNDA PERSONA */
+      /* 🔎 BUSCAR PERSONA B */
 
       let personB = null;
       let rowIndexB = -1;
 
       for (let i = 1; i < rows.length; i++) {
 
-        const orderId = rows[i][0] || "";
+        const orderId =
+          rows[i][0] || "";
 
         if (orderId.includes(other)) {
 
@@ -121,11 +130,7 @@ export default async function handler(req, res) {
 
           personB = {
             name: rows[i][4] || "",
-            sun: rows[i][8] || "",
-            moon: rows[i][9] || "",
-            rising: rows[i][10] || "",
-            pair_message: rows[i][17] || "",
-            pair_date: rows[i][18] || ""
+            sun: rows[i][8] || ""
           };
 
           break;
@@ -133,37 +138,37 @@ export default async function handler(req, res) {
       }
 
       if (!personB) {
-        return res.status(404).json({ error: "Second person not found" });
-      }
 
-      if (personB.pair_date === today && personB.pair_message) {
-
-        return res.status(200).json({
-          choices: [{ message: { content: personB.pair_message } }]
+        return res.status(404).json({
+          error: "Second person not found"
         });
 
       }
+
+      /* 🎲 GENERAR % */
 
       const idsOrdenados =
         [uid, other].sort().join("");
 
       const seed =
-        idsOrdenados +
-        today;
+        idsOrdenados + today;
 
       let hash = 0;
 
       for (let i = 0; i < seed.length; i++) {
-        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+
+        hash =
+          seed.charCodeAt(i) +
+          ((hash << 5) - hash);
+
       }
 
       const percentage =
         30 + Math.abs(hash % 71);
 
-      const prompt = `
-Genera un mensaje corto y claro entre dos personas.
+      /* 🧠 GENERAR MENSAJE */
 
-FORMATO EXACTO:
+      const prompt = `
 
 ${person.name} (${person.sun})
 
@@ -175,179 +180,83 @@ ${personB.name} (${personB.sun})
 
 ✨ Una frase clara sobre cómo se llevan hoy.
 
-🔥 Una recomendación simple para hoy.
+🔥 Una recomendación simple.
 
 💫 Una frase positiva final.
 
 Fecha: ${todayFormatted}
 
-IMPORTANTE:
-- Frases cortas
-- Lenguaje claro
-- No místico
-- Fácil de leer
+Frases cortas.
+Lenguaje claro.
 `;
 
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
+      const response =
+        await fetch(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization":
+              `Bearer ${process.env.OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: "gpt-4.1-mini",
+              messages: [
+                {
+                  role: "user",
+                  content: prompt
+                }
+              ]
+            })
+          }
+        );
 
-      const data = await response.json();
-      const message = data.choices[0].message.content;
+      const data =
+        await response.json();
+
+      const message =
+        data.choices[0].message.content;
+
+      /* 💾 GUARDAR EN SHEETS */
 
       await sheets.spreadsheets.values.update({
+
         spreadsheetId: sheetId,
-        range: `R${rowIndexB}:S${rowIndexB}`,
+
+        range:
+        `R${rowIndexB}:S${rowIndexB}`,
+
         valueInputOption: "RAW",
+
         requestBody: {
+
           values: [[message, today]]
+
         }
+
       });
 
       return res.status(200).json({
-        choices: [{ message: { content: message } }]
+
+        choices: [{
+          message: {
+            content: message
+          }
+        }]
+
       });
 
-    }
-
-    /* ⚡ ENERGÍA — SIN CAMBIOS */
-
-    if (type !== "affinity") {
-
-      if (person.message_date === today && person.message_daily) {
-        return res.status(200).json({
-          choices: [{ message: { content: person.message_daily } }]
-        });
-      }
-
-      const prompt = `
-Genera un mensaje diario de energía emocional.
-
-Hola ${person.name},
-
-Hoy, ${todayFormatted}
-
-✨ Frase potente.
-
-🔥 Acción concreta.
-
-💫 Frase final.
-
-DATOS:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-`;
-
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
-
-      const data = await response.json();
-      const message = data.choices[0].message.content;
-
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `M${rowIndex}:N${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[message, today]]
-        }
-      });
-
-      return res.status(200).json({
-        choices: [{ message: { content: message } }]
-      });
-    }
-
-    /* 💫 AFINIDAD — SIN CAMBIOS */
-
-    if (type === "affinity") {
-
-      if (person.affinity_date === today && person.affinity_daily) {
-        return res.status(200).json({
-          choices: [{ message: { content: person.affinity_daily } }]
-        });
-      }
-
-      const prompt = `
-Escribe una afinidad diaria.
-
-🔥 Signo positivo
-
-💫 Signo fluido
-
-⚡ Signo intenso
-
-⚠️ Evita signo
-
-💡 Consejo final
-
-DATOS:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-`;
-
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
-
-      const data = await response.json();
-      const message = data.choices[0].message.content;
-
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `O${rowIndex}:P${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[message, today]]
-        }
-      });
-
-      return res.status(200).json({
-        choices: [{ message: { content: message } }]
-      });
     }
 
   } catch (error) {
 
     res.status(500).json({
+
       error: "server_error",
+
       message: error.toString()
+
     });
 
   }
