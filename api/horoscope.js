@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
 
-    /* 🔧 CAMBIO 1 — aceptar id además de uid */
+    /* 🔧 aceptar id además de uid */
     const { uid, id, type, other } = req.query;
     const realUID = uid || id;
 
@@ -37,8 +37,7 @@ export default async function handler(req, res) {
 
       const orderId = rows[i][0] || "";
 
-      /* 🔧 CAMBIO 2 — comparación exacta segura */
-      if (String(orderId).trim() === String(realUID).trim()) {
+      if (orderId.includes(realUID)) {
 
         rowIndex = i + 1;
 
@@ -63,10 +62,7 @@ export default async function handler(req, res) {
     }
 
     if (!person) {
-      return res.status(404).json({
-        error: "Person not found",
-        debug_uid: realUID
-      });
+      return res.status(404).json({ error: "Person not found" });
     }
 
     if (type === "profile") {
@@ -81,12 +77,27 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — ARREGLADO */
+    /* 🔮 READPAIR — NUEVO (LEE DIRECTO R + id) */
 
     if (type === "readpair") {
 
+      const fila = parseInt(realUID);
+
+      if (!fila) {
+        return res.status(400).json({
+          error: "Invalid ID"
+        });
+      }
+
+      const readRange = `R${fila}`;
+
+      const readData = await sheets.spreadsheets.values.get({
+        spreadsheetId: sheetId,
+        range: readRange
+      });
+
       const mensaje =
-        person.pair_message ||
+        readData.data.values?.[0]?.[0] ||
         "Aún no tienes ninguna conexión activa.";
 
       return res.status(200).json({
@@ -99,7 +110,7 @@ export default async function handler(req, res) {
 
     }
 
-    /* 🔗 PAIR — GENERAR Y GUARDAR */
+    /* 🔗 PAIR — igual que antes */
 
     if (type === "pair") {
 
@@ -134,8 +145,6 @@ export default async function handler(req, res) {
       if (!personB) {
         return res.status(404).json({ error: "Second person not found" });
       }
-
-      /* SI YA EXISTE */
 
       if (
         (person.pair_date === today && person.pair_message) ||
@@ -217,8 +226,6 @@ Fecha: ${todayFormatted}
       const data = await response.json();
       const message = data.choices[0].message.content;
 
-      /* GUARDAR EN AMBOS */
-
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `R${rowIndex}:S${rowIndex}`,
@@ -243,136 +250,6 @@ Fecha: ${todayFormatted}
         }]
       });
 
-    }
-
-    /* ⚡ ENERGÍA — intacto */
-
-    if (type !== "affinity") {
-
-      if (person.message_date === today && person.message_daily) {
-        return res.status(200).json({
-          choices: [{ message: { content: person.message_daily } }]
-        });
-      }
-
-      const prompt = `
-Genera un mensaje diario de energía emocional.
-
-Hola ${person.name},
-
-Hoy, ${todayFormatted}
-
-✨ Frase potente.
-
-🔥 Acción concreta.
-
-💫 Frase final.
-
-DATOS:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-`;
-
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
-
-      const data = await response.json();
-      const message = data.choices[0].message.content;
-
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `M${rowIndex}:N${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[message, today]]
-        }
-      });
-
-      return res.status(200).json({
-        choices: [{ message: { content: message } }]
-      });
-    }
-
-    /* 💫 AFINIDAD — intacto */
-
-    if (type === "affinity") {
-
-      if (person.affinity_date === today && person.affinity_daily) {
-        return res.status(200).json({
-          choices: [{ message: { content: person.affinity_daily } }]
-        });
-      }
-
-      const prompt = `
-Genera una afinidad diaria EXACTAMENTE con este formato.
-
-Hoy conectas especialmente con:
-
-🔥 [SIGNO] → frase corta positiva.
-
-💫 [SIGNO] → frase corta práctica.
-
-⚡ [SIGNO] → frase corta creativa.
-
-⚠️ Evita hoy:
-
-♐ [SIGNO] → advertencia breve.
-
-💡 Consejo:
-
-Frase final clara y directa.
-
-DATOS ASTRALES:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-`;
-
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            max_tokens: 180,
-            temperature: 0.7,
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
-
-      const data = await response.json();
-      const message = data.choices[0].message.content;
-
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `O${rowIndex}:P${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[message, today]]
-        }
-      });
-
-      return res.status(200).json({
-        choices: [{ message: { content: message } }]
-      });
     }
 
   } catch (error) {
