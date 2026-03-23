@@ -50,7 +50,9 @@ export default async function handler(req, res) {
           message_daily: rows[i][12] || "",
           message_date: rows[i][13] || "",
           affinity_daily: rows[i][14] || "",
-          affinity_date: rows[i][15] || ""
+          affinity_date: rows[i][15] || "",
+          pair_message: rows[i][17] || "",
+          pair_date: rows[i][18] || ""
         };
 
         break;
@@ -109,14 +111,19 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
-      /* 🔮 SOLO LEER MENSAJE */
+      /* 🔮 READPAIR CORRECTO */
 
       if (type === "readpair") {
+
+        const mensaje =
+          person.pair_message ||
+          personB.pair_message ||
+          "No hay conexión guardada.";
 
         return res.status(200).json({
           choices: [{
             message: {
-              content: personB.pair_message || "No hay conexión guardada."
+              content: mensaje
             }
           }]
         });
@@ -125,10 +132,21 @@ export default async function handler(req, res) {
 
       /* SI YA EXISTE HOY */
 
-      if (personB.pair_date === today && personB.pair_message) {
+      if (
+        (person.pair_date === today && person.pair_message) ||
+        (personB.pair_date === today && personB.pair_message)
+      ) {
+
+        const mensaje =
+          person.pair_message ||
+          personB.pair_message;
 
         return res.status(200).json({
-          choices: [{ message: { content: personB.pair_message } }]
+          choices: [{
+            message: {
+              content: mensaje
+            }
+          }]
         });
 
       }
@@ -156,8 +174,6 @@ MUY IMPORTANTE:
 - Mantener exactamente este formato
 - Frases muy cortas
 - Máximo 3 frases
-- Texto elegante
-- Fácil de leer en móvil
 
 FORMATO EXACTO:
 
@@ -179,16 +195,6 @@ ${percentage}%
 💫 Mensaje final corto.
 
 Fecha: ${todayFormatted}
-
-DATOS A:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-
-DATOS B:
-Sol: ${personB.sun}
-Luna: ${personB.moon}
-Ascendente: ${personB.rising}
 `;
 
       const response = await fetch(
@@ -211,6 +217,17 @@ Ascendente: ${personB.rising}
       const data = await response.json();
       const message = data.choices[0].message.content;
 
+      /* 🔥 GUARDAR EN AMBOS */
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `R${rowIndex}:S${rowIndex}`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [[message, today]]
+        }
+      });
+
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `R${rowIndexB}:S${rowIndexB}`,
@@ -221,12 +238,14 @@ Ascendente: ${personB.rising}
       });
 
       return res.status(200).json({
-        choices: [{ message: { content: message } }]
+        choices: [{
+          message: { content: message }
+        }]
       });
 
     }
 
-    /* ⚡ ENERGÍA */
+    /* ⚡ ENERGÍA — intacto */
 
     if (type !== "affinity") {
 
@@ -287,7 +306,7 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD */
+    /* 💫 AFINIDAD — intacto */
 
     if (type === "affinity") {
 
