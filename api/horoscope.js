@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
 
-    /* 🔧 aceptar id además de uid */
+    /* CAMBIO 1 */
     const { uid, id, type, other } = req.query;
     const realUID = uid || id;
 
@@ -37,6 +37,7 @@ export default async function handler(req, res) {
 
       const orderId = rows[i][0] || "";
 
+      /* CAMBIO 2 */
       if (orderId.includes(realUID)) {
 
         rowIndex = i + 1;
@@ -77,27 +78,14 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — NUEVO (LEE DIRECTO R + id) */
+    /* 🔮 READPAIR — ARREGLADO */
 
     if (type === "readpair") {
 
-      const fila = parseInt(realUID);
-
-      if (!fila) {
-        return res.status(400).json({
-          error: "Invalid ID"
-        });
-      }
-
-      const readRange = `R${fila}`;
-
-      const readData = await sheets.spreadsheets.values.get({
-        spreadsheetId: sheetId,
-        range: readRange
-      });
+      /* CAMBIO 3 */
 
       const mensaje =
-        readData.data.values?.[0]?.[0] ||
+        person.pair_message ||
         "Aún no tienes ninguna conexión activa.";
 
       return res.status(200).json({
@@ -110,7 +98,7 @@ export default async function handler(req, res) {
 
     }
 
-    /* 🔗 PAIR — igual que antes */
+    /* 🔗 PAIR — GENERAR Y GUARDAR */
 
     if (type === "pair") {
 
@@ -251,6 +239,8 @@ Fecha: ${todayFormatted}
       });
 
     }
+
+    /* TODO TU RESTO SIGUE EXACTAMENTE IGUAL */
 
   } catch (error) {
 
