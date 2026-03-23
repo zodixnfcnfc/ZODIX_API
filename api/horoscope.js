@@ -37,8 +37,8 @@ export default async function handler(req, res) {
 
       const orderId = rows[i][0] || "";
 
-      /* 🔧 CAMBIO 2 — usar realUID */
-      if (orderId.includes(realUID)) {
+      /* 🔧 CAMBIO 2 — comparación exacta segura */
+      if (String(orderId).trim() === String(realUID).trim()) {
 
         rowIndex = i + 1;
 
@@ -63,7 +63,10 @@ export default async function handler(req, res) {
     }
 
     if (!person) {
-      return res.status(404).json({ error: "Person not found" });
+      return res.status(404).json({
+        error: "Person not found",
+        debug_uid: realUID
+      });
     }
 
     if (type === "profile") {
@@ -78,11 +81,9 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA (ARREGLADO) */
+    /* 🔮 READPAIR — ARREGLADO */
 
     if (type === "readpair") {
-
-      /* 🔧 CAMBIO 3 — leer solo columna R */
 
       const mensaje =
         person.pair_message ||
