@@ -6,7 +6,9 @@ export default async function handler(req, res) {
 
   try {
 
-    const { uid, type, other } = req.query;
+    /* 🔧 CAMBIO 1 — aceptar id además de uid */
+    const { uid, id, type, other } = req.query;
+    const realUID = uid || id;
 
     const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
 
@@ -35,7 +37,8 @@ export default async function handler(req, res) {
 
       const orderId = rows[i][0] || "";
 
-      if (orderId.includes(uid)) {
+      /* 🔧 CAMBIO 2 — usar realUID */
+      if (orderId.includes(realUID)) {
 
         rowIndex = i + 1;
 
@@ -75,9 +78,11 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — ARREGLADO */
+    /* 🔮 READPAIR — SOLO LECTURA (ARREGLADO) */
 
     if (type === "readpair") {
+
+      /* 🔧 CAMBIO 3 — leer solo columna R */
 
       const mensaje =
         person.pair_message ||
@@ -151,7 +156,7 @@ export default async function handler(req, res) {
       }
 
       const idsOrdenados =
-        [uid, other].sort().join("");
+        [realUID, other].sort().join("");
 
       const seed =
         idsOrdenados +
