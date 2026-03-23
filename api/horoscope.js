@@ -61,8 +61,6 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Person not found" });
     }
 
-    /* 🔮 PERFIL */
-
     if (type === "profile") {
       return res.status(200).json(person);
     }
@@ -75,7 +73,7 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔗 CONEXIÓN ENTRE DOS PULSERAS */
+    /* 🔗 PAIR */
 
     if (type === "pair") {
 
@@ -111,8 +109,6 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
-      /* SI YA EXISTE MENSAJE HOY */
-
       if (personB.pair_date === today && personB.pair_message) {
 
         return res.status(200).json({
@@ -120,8 +116,6 @@ export default async function handler(req, res) {
         });
 
       }
-
-      /* 🎯 PORCENTAJE FIJO POR DÍA */
 
       const idsOrdenados =
         [uid, other].sort().join("");
@@ -138,8 +132,6 @@ export default async function handler(req, res) {
 
       const percentage =
         30 + Math.abs(hash % 71);
-
-      /* 🆕 SOLO CAMBIADO ESTE PROMPT */
 
       const prompt = `
 Genera una afinidad entre dos personas.
@@ -202,8 +194,6 @@ Ascendente: ${personB.rising}
 
       const data = await response.json();
       const message = data.choices[0].message.content;
-
-      /* GUARDAR EN R y S */
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
@@ -281,7 +271,7 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD */
+    /* 💫 AFINIDAD — ESTE ES EL CAMBIO IMPORTANTE */
 
     if (type === "affinity") {
 
@@ -292,19 +282,37 @@ Ascendente: ${person.rising}
       }
 
       const prompt = `
-Escribe una afinidad diaria.
+Genera una afinidad diaria EXACTAMENTE con este formato.
 
-🔥 Signo positivo
+MUY IMPORTANTE:
+- No escribir introducciones
+- No explicar nada
+- No usar markdown
+- Frases muy cortas
+- 1 línea por signo
+- Estilo directo y elegante
+- Siempre usar emojis
+- Máximo 12 palabras por línea
 
-💫 Signo fluido
+FORMATO EXACTO:
 
-⚡ Signo intenso
+Hoy conectas especialmente con:
 
-⚠️ Evita signo
+🔥 [SIGNO] → frase corta positiva.
 
-💡 Consejo final
+💫 [SIGNO] → frase corta práctica.
 
-DATOS:
+⚡ [SIGNO] → frase corta creativa.
+
+⚠️ Evita hoy:
+
+♐ [SIGNO] → advertencia breve.
+
+💡 Consejo:
+
+Frase final clara y directa.
+
+DATOS ASTRALES:
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
@@ -320,6 +328,8 @@ Ascendente: ${person.rising}
           },
           body: JSON.stringify({
             model: "gpt-4.1-mini",
+            max_tokens: 180,
+            temperature: 0.7,
             messages: [{ role: "user", content: prompt }]
           })
         }
