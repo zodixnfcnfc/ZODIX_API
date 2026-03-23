@@ -73,9 +73,9 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔗 PAIR */
+    /* 🔗 PAIR + READPAIR */
 
-    if (type === "pair") {
+    if (type === "pair" || type === "readpair") {
 
       if (!other) {
         return res.status(400).json({ error: "Missing second UID" });
@@ -108,6 +108,22 @@ export default async function handler(req, res) {
       if (!personB) {
         return res.status(404).json({ error: "Second person not found" });
       }
+
+      /* 🔮 SOLO LEER MENSAJE */
+
+      if (type === "readpair") {
+
+        return res.status(200).json({
+          choices: [{
+            message: {
+              content: personB.pair_message || "No hay conexión guardada."
+            }
+          }]
+        });
+
+      }
+
+      /* SI YA EXISTE HOY */
 
       if (personB.pair_date === today && personB.pair_message) {
 
@@ -271,7 +287,7 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD — ESTE ES EL CAMBIO IMPORTANTE */
+    /* 💫 AFINIDAD */
 
     if (type === "affinity") {
 
@@ -283,18 +299,6 @@ Ascendente: ${person.rising}
 
       const prompt = `
 Genera una afinidad diaria EXACTAMENTE con este formato.
-
-MUY IMPORTANTE:
-- No escribir introducciones
-- No explicar nada
-- No usar markdown
-- Frases muy cortas
-- 1 línea por signo
-- Estilo directo y elegante
-- Siempre usar emojis
-- Máximo 12 palabras por línea
-
-FORMATO EXACTO:
 
 Hoy conectas especialmente con:
 
