@@ -75,34 +75,13 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA */
+    /* 🔮 READPAIR — ARREGLADO */
 
     if (type === "readpair") {
 
-      if (!other) {
-        return res.status(400).json({ error: "Missing second UID" });
-      }
-
-      let personB = null;
-
-      for (let i = 1; i < rows.length; i++) {
-
-        const orderId = rows[i][0] || "";
-
-        if (orderId.includes(other)) {
-
-          personB = {
-            pair_message: rows[i][17] || ""
-          };
-
-          break;
-        }
-      }
-
       const mensaje =
         person.pair_message ||
-        personB?.pair_message ||
-        "No hay conexión guardada.";
+        "Aún no tienes ninguna conexión activa.";
 
       return res.status(200).json({
         choices: [{
