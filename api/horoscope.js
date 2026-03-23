@@ -75,33 +75,12 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA */
+    /* 🔮 READPAIR — SOLO LEER MI COLUMNA R */
 
     if (type === "readpair") {
 
-      if (!other) {
-        return res.status(400).json({ error: "Missing second UID" });
-      }
-
-      let personB = null;
-
-      for (let i = 1; i < rows.length; i++) {
-
-        const orderId = rows[i][0] || "";
-
-        if (orderId.includes(other)) {
-
-          personB = {
-            pair_message: rows[i][17] || ""
-          };
-
-          break;
-        }
-      }
-
       const mensaje =
         person.pair_message ||
-        personB?.pair_message ||
         "No hay conexión guardada.";
 
       return res.status(200).json({
@@ -149,8 +128,6 @@ export default async function handler(req, res) {
       if (!personB) {
         return res.status(404).json({ error: "Second person not found" });
       }
-
-      /* SI YA EXISTE */
 
       if (
         (person.pair_date === today && person.pair_message) ||
@@ -232,8 +209,6 @@ Fecha: ${todayFormatted}
       const data = await response.json();
       const message = data.choices[0].message.content;
 
-      /* GUARDAR EN AMBOS */
-
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `R${rowIndex}:S${rowIndex}`,
@@ -260,7 +235,7 @@ Fecha: ${todayFormatted}
 
     }
 
-    /* ⚡ ENERGÍA — intacto */
+    /* ⚡ ENERGÍA */
 
     if (type !== "affinity") {
 
@@ -321,7 +296,7 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD — intacto */
+    /* 💫 AFINIDAD */
 
     if (type === "affinity") {
 
