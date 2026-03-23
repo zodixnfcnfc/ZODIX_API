@@ -75,9 +75,48 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔗 PAIR + READPAIR */
+    /* 🔮 READPAIR — SOLO LECTURA */
 
-    if (type === "pair" || type === "readpair") {
+    if (type === "readpair") {
+
+      if (!other) {
+        return res.status(400).json({ error: "Missing second UID" });
+      }
+
+      let personB = null;
+
+      for (let i = 1; i < rows.length; i++) {
+
+        const orderId = rows[i][0] || "";
+
+        if (orderId.includes(other)) {
+
+          personB = {
+            pair_message: rows[i][17] || ""
+          };
+
+          break;
+        }
+      }
+
+      const mensaje =
+        person.pair_message ||
+        personB?.pair_message ||
+        "No hay conexión guardada.";
+
+      return res.status(200).json({
+        choices: [{
+          message: {
+            content: mensaje
+          }
+        }]
+      });
+
+    }
+
+    /* 🔗 PAIR — GENERAR Y GUARDAR */
+
+    if (type === "pair") {
 
       if (!other) {
         return res.status(400).json({ error: "Missing second UID" });
@@ -111,26 +150,7 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
-      /* 🔮 READPAIR CORRECTO */
-
-      if (type === "readpair") {
-
-        const mensaje =
-          person.pair_message ||
-          personB.pair_message ||
-          "No hay conexión guardada.";
-
-        return res.status(200).json({
-          choices: [{
-            message: {
-              content: mensaje
-            }
-          }]
-        });
-
-      }
-
-      /* SI YA EXISTE HOY */
+      /* SI YA EXISTE */
 
       if (
         (person.pair_date === today && person.pair_message) ||
@@ -169,11 +189,6 @@ export default async function handler(req, res) {
 
       const prompt = `
 Genera una afinidad entre dos personas.
-
-MUY IMPORTANTE:
-- Mantener exactamente este formato
-- Frases muy cortas
-- Máximo 3 frases
 
 FORMATO EXACTO:
 
@@ -217,7 +232,7 @@ Fecha: ${todayFormatted}
       const data = await response.json();
       const message = data.choices[0].message.content;
 
-      /* 🔥 GUARDAR EN AMBOS */
+      /* GUARDAR EN AMBOS */
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
