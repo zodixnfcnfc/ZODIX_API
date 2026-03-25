@@ -40,7 +40,7 @@ export default async function handler(req, res) {
 
         rowIndex = i + 1;
 
-        // Aseguramos que la fila tenga suficientes columnas para evitar errores de lectura
+        // ESTA ES LA ÚNICA MODIFICACIÓN: Aseguramos que la fila tenga datos hasta la columna S
         const safeRow = currentRow.concat(Array(20).fill(""));
 
         person = {
@@ -55,8 +55,8 @@ export default async function handler(req, res) {
           message_date: safeRow[13] || "",
           affinity_daily: safeRow[14] || "",
           affinity_date: safeRow[15] || "",
-          pair_message: safeRow[17] || "", // Columna R
-          pair_date: safeRow[18] || ""    // Columna S
+          pair_message: safeRow[17] || "",
+          pair_date: safeRow[18] || ""
         };
 
         break;
@@ -95,7 +95,7 @@ export default async function handler(req, res) {
         const orderId = currentRowB[0] || "";
 
         if (orderId.includes(other)) {
-          
+
           const safeRowB = currentRowB.concat(Array(20).fill(""));
 
           personB = {
@@ -230,7 +230,7 @@ Fecha: ${todayFormatted}
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-4.1-mini",
             max_tokens: 140,
             temperature: 0.7,
             messages: [{ role: "user", content: prompt }]
@@ -307,7 +307,7 @@ Ascendente: ${person.rising}
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-4.1-mini",
             messages: [{ role: "user", content: prompt }]
           })
         }
@@ -374,7 +374,7 @@ Ascendente: ${person.rising}
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-4.1-mini",
             max_tokens: 180,
             temperature: 0.7,
             messages: [{ role: "user", content: prompt }]
