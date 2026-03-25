@@ -242,7 +242,7 @@ Fecha: ${todayFormatted}
 
     /* ⚡ ENERGÍA — intacto */
 
-    if (type !== "affinity") {
+if (type === "energy") {
 
       if (person.message_date === today && person.message_daily) {
         return res.status(200).json({
