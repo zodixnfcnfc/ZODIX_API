@@ -316,8 +316,12 @@ Ascendente: ${person.rising}
       }
 
       const prompt = `
-Genera una afinidad diaria EXACTAMENTE con este formato.
+Genera una afinidad diaria basada en los DATOS ASTRALES del final.
 
+REGLA DE ORO: El mensaje DEBE empezar obligatoriamente con la frase: "Hoy, ${todayFormatted}, conectas especialmente con:" 
+IMPORTANTE: No incluyas los "DATOS ASTRALES" en tu respuesta, úsalos solo como referencia.
+
+FORMATO DE RESPUESTA:
 Hoy, ${todayFormatted}, conectas especialmente con:
 
 🔥 [SIGNO] → frase corta positiva.
@@ -334,7 +338,8 @@ Hoy, ${todayFormatted}, conectas especialmente con:
 
 Frase final clara y directa.
 
-DATOS ASTRALES:
+---
+DATOS ASTRALES (NO ESCRIBIR ESTO EN LA RESPUESTA):
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
