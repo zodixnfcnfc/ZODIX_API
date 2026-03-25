@@ -75,13 +75,23 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA */
+ /* 🔮 READPAIR — SOLO LECTURA */
 
-    if (type === "readpair") {
+if (type === "readpair") {
 
-      if (!other) {
-        return res.status(400).json({ error: "Missing second UID" });
+  const mensaje =
+    person.pair_message ||
+    "No hay conexión guardada.";
+
+  return res.status(200).json({
+    choices: [{
+      message: {
+        content: mensaje
       }
+    }]
+  });
+
+}
 
       let personB = null;
 
