@@ -318,7 +318,7 @@ Ascendente: ${person.rising}
       const prompt = `
 Genera una afinidad diaria EXACTAMENTE con este formato.
 
-Hoy conectas especialmente con:
+Hoy, ${todayFormatted}, conectas especialmente con:
 
 🔥 [SIGNO] → frase corta positiva.
 
