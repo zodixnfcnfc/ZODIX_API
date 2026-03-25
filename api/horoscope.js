@@ -28,20 +28,21 @@ export default async function handler(req, res) {
 
     const rows = sheetData.data.values;
 
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: "No data in sheet" });
+    }
+
     let rowIndex = -1;
     let person = null;
 
+    // BÚSQUEDA PERSONA A (UID) - Comparación exacta para evitar fallos aleatorios
     for (let i = 1; i < rows.length; i++) {
-
-      const currentRow = rows[i] || [];
-      const orderId = currentRow[0] || "";
-
-      if (orderId.includes(uid)) {
-
+      const orderId = (rows[i][0] || "").toString().trim();
+      if (orderId === uid?.toString().trim()) {
         rowIndex = i + 1;
-
-        // ESTA ES LA ÚNICA MODIFICACIÓN: Aseguramos que la fila tenga datos hasta la columna S
-        const safeRow = currentRow.concat(Array(20).fill(""));
+        
+        // Creamos una fila segura de 20 columnas para que nunca falle la lectura de la R
+        const safeRow = rows[i].concat(Array(20).fill(""));
 
         person = {
           name: safeRow[4] || "",
@@ -55,10 +56,9 @@ export default async function handler(req, res) {
           message_date: safeRow[13] || "",
           affinity_daily: safeRow[14] || "",
           affinity_date: safeRow[15] || "",
-          pair_message: safeRow[17] || "",
-          pair_date: safeRow[18] || ""
+          pair_message: safeRow[17] || "", // Columna R
+          pair_date: safeRow[18] || ""    // Columna S
         };
-
         break;
       }
     }
@@ -79,7 +79,7 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA */
+    /* 🔮 READPAIR — SOLO LECTURA (Ver conexión activa) */
 
     if (type === "readpair") {
 
@@ -87,34 +87,25 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Missing second UID" });
       }
 
-      let personB = null;
+      let personB_pair_message = "";
 
+      // BÚSQUEDA PERSONA B (OTHER) - Comparación exacta
       for (let i = 1; i < rows.length; i++) {
-
-        const currentRowB = rows[i] || [];
-        const orderId = currentRowB[0] || "";
-
-        if (orderId.includes(other)) {
-
-          const safeRowB = currentRowB.concat(Array(20).fill(""));
-
-          personB = {
-            pair_message: safeRowB[17] || ""
-          };
-
+        const orderId = (rows[i][0] || "").toString().trim();
+        if (orderId === other?.toString().trim()) {
+          const safeRowB = rows[i].concat(Array(20).fill(""));
+          personB_pair_message = safeRowB[17] || ""; // Leemos columna R de la otra persona
           break;
         }
       }
 
-      const mensaje =
-        person.pair_message ||
-        personB?.pair_message ||
-        "No hay conexión guardada.";
+      // Priorizamos el mensaje que esté guardado en cualquiera de los dos
+      const mensajeFinal = person.pair_message || personB_pair_message || "No hay conexión guardada.";
 
       return res.status(200).json({
         choices: [{
           message: {
-            content: mensaje
+            content: mensajeFinal
           }
         }]
       });
@@ -133,15 +124,10 @@ export default async function handler(req, res) {
       let rowIndexB = -1;
 
       for (let i = 1; i < rows.length; i++) {
-
-        const currentRowB = rows[i] || [];
-        const orderId = currentRowB[0] || "";
-
-        if (orderId.includes(other)) {
-
+        const orderId = (rows[i][0] || "").toString().trim();
+        if (orderId === other?.toString().trim()) {
           rowIndexB = i + 1;
-          const safeRowB = currentRowB.concat(Array(20).fill(""));
-
+          const safeRowB = rows[i].concat(Array(20).fill(""));
           personB = {
             name: safeRowB[4] || "",
             sun: safeRowB[8] || "",
@@ -150,7 +136,6 @@ export default async function handler(req, res) {
             pair_message: safeRowB[17] || "",
             pair_date: safeRowB[18] || ""
           };
-
           break;
         }
       }
@@ -166,9 +151,7 @@ export default async function handler(req, res) {
         (personB.pair_date === today && personB.pair_message)
       ) {
 
-        const mensaje =
-          person.pair_message ||
-          personB.pair_message;
+        const mensaje = person.pair_message || personB.pair_message;
 
         return res.status(200).json({
           choices: [{
@@ -180,21 +163,13 @@ export default async function handler(req, res) {
 
       }
 
-      const idsOrdenados =
-        [uid, other].sort().join("");
-
-      const seed =
-        idsOrdenados +
-        today;
-
+      const idsOrdenados = [uid, other].sort().join("");
+      const seed = idsOrdenados + today;
       let hash = 0;
-
       for (let i = 0; i < seed.length; i++) {
         hash = seed.charCodeAt(i) + ((hash << 5) - hash);
       }
-
-      const percentage =
-        30 + Math.abs(hash % 71);
+      const percentage = 30 + Math.abs(hash % 71);
 
       const prompt = `
 Genera una afinidad entre dos personas.
@@ -400,12 +375,9 @@ Ascendente: ${person.rising}
     }
 
   } catch (error) {
-
     res.status(500).json({
       error: "server_error",
       message: error.toString()
     });
-
   }
-
 }
