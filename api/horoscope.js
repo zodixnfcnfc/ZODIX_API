@@ -59,8 +59,8 @@ export default async function handler(req, res) {
           message_date: safeRow[13] || "",
           affinity_daily: safeRow[14] || "",
           affinity_date: safeRow[15] || "",
-          pair_message: safeRow[17] || "", // Columna R
-          pair_date: safeRow[18] || ""    // Columna S
+          pair_message: safeRow[17] || "",
+          pair_date: safeRow[18] || ""
         };
 
         break;
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA */
+    /* 🔮 READPAIR — SOLO LECTURA (CORREGIDO PARA EL BOTÓN DIRECTO) */
 
     if (type === "readpair") {
 
@@ -93,14 +93,13 @@ export default async function handler(req, res) {
         for (let i = 1; i < rows.length; i++) {
           const orderIdB = (rows[i][0] || "").toString().trim();
           if (orderIdB === other.toString().trim()) {
-            // AJUSTE: Usamos el safeRow aquí tmabién para que lea la R aunque esté vacía
-            const safeRowB = rows[i].concat(Array(20).fill(""));
-            personBMessage = safeRowB[17] || "";
+            personBMessage = rows[i][17] || "";
             break;
           }
         }
       }
 
+      // Si no hay "other", devolvemos lo que tenga la persona principal
       const mensaje =
         person.pair_message ||
         personBMessage ||
@@ -116,7 +115,7 @@ export default async function handler(req, res) {
 
     }
 
-    /* 🔗 PAIR — GENERAR Y GUARDAR */
+    /* 🔗 PAIR — GENERAR Y GUARDAR (MODIFICADO PARA MULTI-PERSONA) */
 
     if (type === "pair") {
 
@@ -177,15 +176,17 @@ export default async function handler(req, res) {
       }
       const percentage = 30 + Math.abs(hash % 71);
 
-      // AJUSTE CRÍTICO: Hemos modificado el formato del prompt para compactar la sección de nombres
       const prompt = `
 Genera una afinidad entre dos personas.
 
+FORMATO EXACTO:
+
 ✨ Afinidad Detectada
 
-// No modifiques el prompt original, solo compacta las líneas para los nombres y el +
 ${person.name.toUpperCase()} (${person.sun.toUpperCase()})
+
 +
+
 ${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})
 
 🔗 Conexión energética hoy:
@@ -220,12 +221,6 @@ Fecha: ${todayFormatted}
       const data = await response.json();
       const message = data.choices[0].message.content;
 
-      // AJUSTE: Al guardar, forzamos que el formato sea compacto en esa sección específica
-      const finalMessage = message.replace(
-        new RegExp(`${person.name.toUpperCase()}\s*\n+\s*\+\s*\n+\s*${personB.name.toUpperCase()}`, 'g'),
-        `${person.name.toUpperCase()}\n+\n${personB.name.toUpperCase()}`
-      );
-
       /* GUARDAR EN AMBOS (SOBREESCRIBE EL ANTERIOR) */
 
       await sheets.spreadsheets.values.update({
@@ -233,7 +228,7 @@ Fecha: ${todayFormatted}
         range: `R${rowIndex}:S${rowIndex}`,
         valueInputOption: "RAW",
         requestBody: {
-          values: [[finalMessage, today]]
+          values: [[message, today]]
         }
       });
 
@@ -242,13 +237,13 @@ Fecha: ${todayFormatted}
         range: `R${rowIndexB}:S${rowIndexB}`,
         valueInputOption: "RAW",
         requestBody: {
-          values: [[finalMessage, today]]
+          values: [[message, today]]
         }
       });
 
       return res.status(200).json({
         choices: [{
-          message: { content: finalMessage }
+          message: { content: message }
         }]
       });
 
