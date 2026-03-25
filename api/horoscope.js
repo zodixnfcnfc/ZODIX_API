@@ -35,13 +35,13 @@ export default async function handler(req, res) {
     let rowIndex = -1;
     let person = null;
 
-    // BÚSQUEDA PERSONA A (UID) - Comparación exacta para evitar fallos aleatorios
+    // BUSCAR PERSONA A (UID) - Comparación exacta y blindaje de columnas
     for (let i = 1; i < rows.length; i++) {
       const orderId = (rows[i][0] || "").toString().trim();
       if (orderId === uid?.toString().trim()) {
         rowIndex = i + 1;
         
-        // Creamos una fila segura de 20 columnas para que nunca falle la lectura de la R
+        // Creamos una fila "segura" de 20 columnas para que la R (17) nunca sea undefined
         const safeRow = rows[i].concat(Array(20).fill(""));
 
         person = {
@@ -79,27 +79,24 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA (Ver conexión activa) */
+    /* 🔮 READPAIR — SOLO LECTURA (Aquí estaba el fallo aleatorio) */
 
     if (type === "readpair") {
-
-      if (!other) {
-        return res.status(400).json({ error: "Missing second UID" });
-      }
-
       let personB_pair_message = "";
 
-      // BÚSQUEDA PERSONA B (OTHER) - Comparación exacta
-      for (let i = 1; i < rows.length; i++) {
-        const orderId = (rows[i][0] || "").toString().trim();
-        if (orderId === other?.toString().trim()) {
-          const safeRowB = rows[i].concat(Array(20).fill(""));
-          personB_pair_message = safeRowB[17] || ""; // Leemos columna R de la otra persona
-          break;
+      // Si nos pasan un segundo UID (other), buscamos también en su fila por si acaso
+      if (other) {
+        for (let i = 1; i < rows.length; i++) {
+          const orderIdB = (rows[i][0] || "").toString().trim();
+          if (orderIdB === other.toString().trim()) {
+            const safeRowB = rows[i].concat(Array(20).fill(""));
+            personB_pair_message = safeRowB[17] || "";
+            break;
+          }
         }
       }
 
-      // Priorizamos el mensaje que esté guardado en cualquiera de los dos
+      // El mensaje será el de la persona A, o el de la B si la A está vacía
       const mensajeFinal = person.pair_message || personB_pair_message || "No hay conexión guardada.";
 
       return res.status(200).json({
@@ -109,7 +106,6 @@ export default async function handler(req, res) {
           }
         }]
       });
-
     }
 
     /* 🔗 PAIR — GENERAR Y GUARDAR */
@@ -124,8 +120,8 @@ export default async function handler(req, res) {
       let rowIndexB = -1;
 
       for (let i = 1; i < rows.length; i++) {
-        const orderId = (rows[i][0] || "").toString().trim();
-        if (orderId === other?.toString().trim()) {
+        const orderIdB = (rows[i][0] || "").toString().trim();
+        if (orderIdB === other.toString().trim()) {
           rowIndexB = i + 1;
           const safeRowB = rows[i].concat(Array(20).fill(""));
           personB = {
@@ -144,23 +140,15 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
-      /* SI YA EXISTE */
-
+      /* SI YA EXISTE CONEXIÓN HOY */
       if (
         (person.pair_date === today && person.pair_message) ||
         (personB.pair_date === today && personB.pair_message)
       ) {
-
-        const mensaje = person.pair_message || personB.pair_message;
-
+        const mensajePrevio = person.pair_message || personB.pair_message;
         return res.status(200).json({
-          choices: [{
-            message: {
-              content: mensaje
-            }
-          }]
+          choices: [{ message: { content: mensajePrevio } }]
         });
-
       }
 
       const idsOrdenados = [uid, other].sort().join("");
@@ -171,30 +159,7 @@ export default async function handler(req, res) {
       }
       const percentage = 30 + Math.abs(hash % 71);
 
-      const prompt = `
-Genera una afinidad entre dos personas.
-
-FORMATO EXACTO:
-
-✨ Afinidad Detectada
-
-${person.name.toUpperCase()} (${person.sun.toUpperCase()})
-
-+
-
-${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})
-
-🔗 Conexión energética hoy:
-${percentage}%
-
-✨ Frase corta positiva.
-
-🔥 Consejo breve.
-
-💫 Mensaje final corto.
-
-Fecha: ${todayFormatted}
-`;
+      const prompt = `Genera una afinidad entre dos personas.\n\nFORMATO EXACTO:\n\n✨ Afinidad Detectada\n\n${person.name.toUpperCase()} (${person.sun.toUpperCase()})\n\n+\n\n${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})\n\n🔗 Conexión energética hoy:\n${percentage}%\n\n✨ Frase corta positiva.\n\n🔥 Consejo breve.\n\n💫 Mensaje final corto.\n\nFecha: ${todayFormatted}`;
 
       const response = await fetch(
         "https://api.openai.com/v1/chat/completions",
@@ -217,76 +182,46 @@ Fecha: ${todayFormatted}
       const message = data.choices[0].message.content;
 
       /* GUARDAR EN AMBOS */
-
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `R${rowIndex}:S${rowIndex}`,
         valueInputOption: "RAW",
-        requestBody: {
-          values: [[message, today]]
-        }
+        requestBody: { values: [[message, today]] }
       });
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `R${rowIndexB}:S${rowIndexB}`,
         valueInputOption: "RAW",
-        requestBody: {
-          values: [[message, today]]
-        }
+        requestBody: { values: [[message, today]] }
       });
 
       return res.status(200).json({
-        choices: [{
-          message: { content: message }
-        }]
+        choices: [{ message: { content: message } }]
       });
-
     }
 
-    /* ⚡ ENERGÍA — intacto */
-
+    /* ⚡ ENERGÍA */
     if (type !== "affinity") {
-
       if (person.message_date === today && person.message_daily) {
         return res.status(200).json({
           choices: [{ message: { content: person.message_daily } }]
         });
       }
 
-      const prompt = `
-Genera un mensaje diario de energía emocional.
+      const prompt = `Genera un mensaje diario de energía emocional.\n\nHola ${person.name},\n\nHoy, ${todayFormatted}\n\n✨ Frase potente.\n\n🔥 Acción concreta.\n\n💫 Frase final.\n\nDATOS:\nSol: ${person.sun}\nLuna: ${person.moon}\nAscendente: ${person.rising}`;
 
-Hola ${person.name},
-
-Hoy, ${todayFormatted}
-
-✨ Frase potente.
-
-🔥 Acción concreta.
-
-💫 Frase final.
-
-DATOS:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-`;
-
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
 
       const data = await response.json();
       const message = data.choices[0].message.content;
@@ -295,9 +230,7 @@ Ascendente: ${person.rising}
         spreadsheetId: sheetId,
         range: `M${rowIndex}:N${rowIndex}`,
         valueInputOption: "RAW",
-        requestBody: {
-          values: [[message, today]]
-        }
+        requestBody: { values: [[message, today]] }
       });
 
       return res.status(200).json({
@@ -305,57 +238,29 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* 💫 AFINIDAD — intacto */
-
+    /* 💫 AFINIDAD */
     if (type === "affinity") {
-
       if (person.affinity_date === today && person.affinity_daily) {
         return res.status(200).json({
           choices: [{ message: { content: person.affinity_daily } }]
         });
       }
 
-      const prompt = `
-Genera una afinidad diaria EXACTAMENTE con este formato.
+      const prompt = `Genera una afinidad diaria.\n\nHoy conectas con:\n🔥 [SIGNO]\n💫 [SIGNO]\n⚡ [SIGNO]\n⚠️ Evita hoy:\n♐ [SIGNO]\n💡 Consejo final.\n\nDATOS:\nSol: ${person.sun}\nLuna: ${person.moon}\nAscendente: ${person.rising}`;
 
-Hoy conectas especialmente con:
-
-🔥 [SIGNO] → frase corta positiva.
-
-💫 [SIGNO] → frase corta práctica.
-
-⚡ [SIGNO] → frase corta creativa.
-
-⚠️ Evita hoy:
-
-♐ [SIGNO] → advertencia breve.
-
-💡 Consejo:
-
-Frase final clara y directa.
-
-DATOS ASTRALES:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-`;
-
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            max_tokens: 180,
-            temperature: 0.7,
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4.1-mini",
+          max_tokens: 180,
+          temperature: 0.7,
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
 
       const data = await response.json();
       const message = data.choices[0].message.content;
@@ -364,9 +269,7 @@ Ascendente: ${person.rising}
         spreadsheetId: sheetId,
         range: `O${rowIndex}:P${rowIndex}`,
         valueInputOption: "RAW",
-        requestBody: {
-          values: [[message, today]]
-        }
+        requestBody: { values: [[message, today]] }
       });
 
       return res.status(200).json({
@@ -375,9 +278,7 @@ Ascendente: ${person.rising}
     }
 
   } catch (error) {
-    res.status(500).json({
-      error: "server_error",
-      message: error.toString()
-    });
+    res.status(500).json({ error: "server_error", message: error.toString() });
   }
 }
+
