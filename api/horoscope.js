@@ -92,7 +92,6 @@ export default async function handler(req, res) {
         if (orderId.includes(other)) {
 
           personB = {
-            // Buscamos específicamente en la columna R (índice 17) de la otra persona
             pair_message: rows[i][17] || ""
           };
 
@@ -100,7 +99,6 @@ export default async function handler(req, res) {
         }
       }
 
-      // IMPORTANTE: Si personB existe y tiene mensaje, lo priorizamos si el usuario A no lo tiene
       const mensaje =
         person.pair_message ||
         personB?.pair_message ||
@@ -223,7 +221,7 @@ Fecha: ${todayFormatted}
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-4.1-mini",
             max_tokens: 140,
             temperature: 0.7,
             messages: [{ role: "user", content: prompt }]
@@ -300,7 +298,7 @@ Ascendente: ${person.rising}
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-4.1-mini",
             messages: [{ role: "user", content: prompt }]
           })
         }
@@ -367,7 +365,7 @@ Ascendente: ${person.rising}
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-4.1-mini",
             max_tokens: 180,
             temperature: 0.7,
             messages: [{ role: "user", content: prompt }]
