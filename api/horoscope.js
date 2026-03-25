@@ -6,8 +6,7 @@ export default async function handler(req, res) {
 
   try {
 
-const uid = req.query.uid || req.query.id;
-const { type, other } = req.query;
+    const { uid, type, other } = req.query;
 
     const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
 
@@ -76,12 +75,33 @@ const { type, other } = req.query;
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA (CORREGIDO) */
+    /* 🔮 READPAIR — SOLO LECTURA */
 
     if (type === "readpair") {
 
+      if (!other) {
+        return res.status(400).json({ error: "Missing second UID" });
+      }
+
+      let personB = null;
+
+      for (let i = 1; i < rows.length; i++) {
+
+        const orderId = rows[i][0] || "";
+
+        if (orderId.includes(other)) {
+
+          personB = {
+            pair_message: rows[i][17] || ""
+          };
+
+          break;
+        }
+      }
+
       const mensaje =
         person.pair_message ||
+        personB?.pair_message ||
         "No hay conexión guardada.";
 
       return res.status(200).json({
@@ -242,7 +262,7 @@ Fecha: ${todayFormatted}
 
     /* ⚡ ENERGÍA — intacto */
 
-if (type === "energy") {
+    if (type !== "affinity") {
 
       if (person.message_date === today && person.message_daily) {
         return res.status(200).json({
@@ -380,4 +400,3 @@ Ascendente: ${person.rising}
   }
 
 }
-
