@@ -153,7 +153,6 @@ export default async function handler(req, res) {
       }
 
       /* SI YA EXISTE CON ESTA PERSONA CONCRETA */
-      // Solo devolvemos el guardado si el mensaje de hoy contiene el nombre de la persona B
       const yaExisteConEste = person.pair_message && 
                              person.pair_date === today && 
                              person.pair_message.toUpperCase().includes(personB.name.toUpperCase());
@@ -176,21 +175,17 @@ export default async function handler(req, res) {
       }
       const percentage = 30 + Math.abs(hash % 71);
 
+      // He ajustado este bloque para que no haya saltos de línea dobles entre nombres
       const prompt = `
 Genera una afinidad entre dos personas.
 
 FORMATO EXACTO:
-
 ✨ Afinidad Detectada
-
 ${person.name.toUpperCase()} (${person.sun.toUpperCase()})
-
 +
-
 ${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})
 
-🔗 Conexión energética hoy:
-${percentage}%
+🔗 Conexión energética hoy: ${percentage}%
 
 ✨ Frase corta positiva.
 
@@ -221,7 +216,7 @@ Fecha: ${todayFormatted}
       const data = await response.json();
       const message = data.choices[0].message.content;
 
-      /* GUARDAR EN AMBOS (SOBREESCRIBE EL ANTERIOR) */
+      /* GUARDAR EN AMBOS */
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
