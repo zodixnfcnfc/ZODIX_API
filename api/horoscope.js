@@ -75,43 +75,12 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
- /* 🔮 READPAIR — SOLO LECTURA */
+    /* 🔮 READPAIR — CORREGIDO */
 
-if (type === "readpair") {
-
-  const mensaje =
-    person.pair_message ||
-    "No hay conexión guardada.";
-
-  return res.status(200).json({
-    choices: [{
-      message: {
-        content: mensaje
-      }
-    }]
-  });
-
-}
-
-      let personB = null;
-
-      for (let i = 1; i < rows.length; i++) {
-
-        const orderId = rows[i][0] || "";
-
-        if (orderId.includes(other)) {
-
-          personB = {
-            pair_message: rows[i][17] || ""
-          };
-
-          break;
-        }
-      }
+    if (type === "readpair") {
 
       const mensaje =
         person.pair_message ||
-        personB?.pair_message ||
         "No hay conexión guardada.";
 
       return res.status(200).json({
@@ -124,7 +93,7 @@ if (type === "readpair") {
 
     }
 
-    /* 🔗 PAIR — GENERAR Y GUARDAR */
+    /* 🔗 PAIR — SIN CAMBIOS */
 
     if (type === "pair") {
 
@@ -159,8 +128,6 @@ if (type === "readpair") {
       if (!personB) {
         return res.status(404).json({ error: "Second person not found" });
       }
-
-      /* SI YA EXISTE */
 
       if (
         (person.pair_date === today && person.pair_message) ||
@@ -242,8 +209,6 @@ Fecha: ${todayFormatted}
       const data = await response.json();
       const message = data.choices[0].message.content;
 
-      /* GUARDAR EN AMBOS */
-
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `R${rowIndex}:S${rowIndex}`,
@@ -270,7 +235,7 @@ Fecha: ${todayFormatted}
 
     }
 
-    /* ⚡ ENERGÍA — intacto */
+    /* RESTO DEL CÓDIGO IGUAL — NO TOCADO */
 
     if (type !== "affinity") {
 
@@ -330,8 +295,6 @@ Ascendente: ${person.rising}
         choices: [{ message: { content: message } }]
       });
     }
-
-    /* 💫 AFINIDAD — intacto */
 
     if (type === "affinity") {
 
