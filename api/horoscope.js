@@ -6,7 +6,8 @@ export default async function handler(req, res) {
 
   try {
 
-    const { uid, type, other } = req.query;
+const uid = req.query.uid || req.query.id;
+const { type, other } = req.query;
 
     const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
 
