@@ -40,12 +40,11 @@ export default async function handler(req, res) {
 
       const orderId = (rows[i][0] || "").toString().trim();
 
-      // Usamos comparación exacta para evitar errores entre ID "1" e ID "10"
       if (orderId === uid?.toString().trim()) {
 
         rowIndex = i + 1;
 
-        // Blindaje: Si la fila es corta, rellenamos con vacíos para que no de error
+        // Blindaje para evitar errores si la fila es corta
         const safeRow = rows[i].concat(Array(20).fill(""));
 
         person = {
@@ -60,8 +59,8 @@ export default async function handler(req, res) {
           message_date: safeRow[13] || "",
           affinity_daily: safeRow[14] || "",
           affinity_date: safeRow[15] || "",
-          pair_message: safeRow[17] || "", // Columna R
-          pair_date: safeRow[18] || ""    // Columna S
+          pair_message: safeRow[17] || "",
+          pair_date: safeRow[18] || ""
         };
 
         break;
@@ -84,11 +83,10 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA (CORREGIDO) */
+    /* 🔮 READPAIR — SOLO LECTURA (CORREGIDO PARA EL BOTÓN DIRECTO) */
 
     if (type === "readpair") {
 
-      // Eliminamos el bloqueo "if(!other)" para que el botón funcione solo con tu UID
       let personBMessage = "";
 
       if (other) {
@@ -101,6 +99,7 @@ export default async function handler(req, res) {
         }
       }
 
+      // Si no hay "other", devolvemos lo que tenga la persona principal
       const mensaje =
         person.pair_message ||
         personBMessage ||
@@ -116,7 +115,7 @@ export default async function handler(req, res) {
 
     }
 
-    /* 🔗 PAIR — GENERAR Y GUARDAR */
+    /* 🔗 PAIR — GENERAR Y GUARDAR (MODIFICADO PARA MULTI-PERSONA) */
 
     if (type === "pair") {
 
@@ -153,42 +152,29 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
-      /* SI YA EXISTE */
+      /* SI YA EXISTE CON ESTA PERSONA CONCRETA */
+      // Solo devolvemos el guardado si el mensaje de hoy contiene el nombre de la persona B
+      const yaExisteConEste = person.pair_message && 
+                             person.pair_date === today && 
+                             person.pair_message.toUpperCase().includes(personB.name.toUpperCase());
 
-      if (
-        (person.pair_date === today && person.pair_message) ||
-        (personB.pair_date === today && personB.pair_message)
-      ) {
-
-        const mensaje =
-          person.pair_message ||
-          personB.pair_message;
-
+      if (yaExisteConEste) {
         return res.status(200).json({
           choices: [{
             message: {
-              content: mensaje
+              content: person.pair_message
             }
           }]
         });
-
       }
 
-      const idsOrdenados =
-        [uid, other].sort().join("");
-
-      const seed =
-        idsOrdenados +
-        today;
-
+      const idsOrdenados = [uid, other].sort().join("");
+      const seed = idsOrdenados + today;
       let hash = 0;
-
       for (let i = 0; i < seed.length; i++) {
         hash = seed.charCodeAt(i) + ((hash << 5) - hash);
       }
-
-      const percentage =
-        30 + Math.abs(hash % 71);
+      const percentage = 30 + Math.abs(hash % 71);
 
       const prompt = `
 Genera una afinidad entre dos personas.
@@ -235,7 +221,7 @@ Fecha: ${todayFormatted}
       const data = await response.json();
       const message = data.choices[0].message.content;
 
-      /* GUARDAR EN AMBOS */
+      /* GUARDAR EN AMBOS (SOBREESCRIBE EL ANTERIOR) */
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
