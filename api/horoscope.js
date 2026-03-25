@@ -33,26 +33,30 @@ export default async function handler(req, res) {
 
     for (let i = 1; i < rows.length; i++) {
 
-      const orderId = rows[i][0] || "";
+      const currentRow = rows[i] || [];
+      const orderId = currentRow[0] || "";
 
       if (orderId.includes(uid)) {
 
         rowIndex = i + 1;
 
+        // Aseguramos que la fila tenga suficientes columnas para evitar errores de lectura
+        const safeRow = currentRow.concat(Array(20).fill(""));
+
         person = {
-          name: rows[i][4] || "",
-          birth_date: rows[i][5] || "",
-          birth_hour: rows[i][6] || "",
-          birth_place: rows[i][7] || "",
-          sun: rows[i][8] || "",
-          moon: rows[i][9] || "",
-          rising: rows[i][10] || "",
-          message_daily: rows[i][12] || "",
-          message_date: rows[i][13] || "",
-          affinity_daily: rows[i][14] || "",
-          affinity_date: rows[i][15] || "",
-          pair_message: rows[i][17] || "",
-          pair_date: rows[i][18] || ""
+          name: safeRow[4] || "",
+          birth_date: safeRow[5] || "",
+          birth_hour: safeRow[6] || "",
+          birth_place: safeRow[7] || "",
+          sun: safeRow[8] || "",
+          moon: safeRow[9] || "",
+          rising: safeRow[10] || "",
+          message_daily: safeRow[12] || "",
+          message_date: safeRow[13] || "",
+          affinity_daily: safeRow[14] || "",
+          affinity_date: safeRow[15] || "",
+          pair_message: safeRow[17] || "", // Columna R
+          pair_date: safeRow[18] || ""    // Columna S
         };
 
         break;
@@ -87,12 +91,15 @@ export default async function handler(req, res) {
 
       for (let i = 1; i < rows.length; i++) {
 
-        const orderId = rows[i][0] || "";
+        const currentRowB = rows[i] || [];
+        const orderId = currentRowB[0] || "";
 
         if (orderId.includes(other)) {
+          
+          const safeRowB = currentRowB.concat(Array(20).fill(""));
 
           personB = {
-            pair_message: rows[i][17] || ""
+            pair_message: safeRowB[17] || ""
           };
 
           break;
@@ -127,19 +134,21 @@ export default async function handler(req, res) {
 
       for (let i = 1; i < rows.length; i++) {
 
-        const orderId = rows[i][0] || "";
+        const currentRowB = rows[i] || [];
+        const orderId = currentRowB[0] || "";
 
         if (orderId.includes(other)) {
 
           rowIndexB = i + 1;
+          const safeRowB = currentRowB.concat(Array(20).fill(""));
 
           personB = {
-            name: rows[i][4] || "",
-            sun: rows[i][8] || "",
-            moon: rows[i][9] || "",
-            rising: rows[i][10] || "",
-            pair_message: rows[i][17] || "",
-            pair_date: rows[i][18] || ""
+            name: safeRowB[4] || "",
+            sun: safeRowB[8] || "",
+            moon: safeRowB[9] || "",
+            rising: safeRowB[10] || "",
+            pair_message: safeRowB[17] || "",
+            pair_date: safeRowB[18] || ""
           };
 
           break;
@@ -221,7 +230,7 @@ Fecha: ${todayFormatted}
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4.1-mini",
+            model: "gpt-4o-mini",
             max_tokens: 140,
             temperature: 0.7,
             messages: [{ role: "user", content: prompt }]
@@ -298,7 +307,7 @@ Ascendente: ${person.rising}
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4.1-mini",
+            model: "gpt-4o-mini",
             messages: [{ role: "user", content: prompt }]
           })
         }
@@ -365,7 +374,7 @@ Ascendente: ${person.rising}
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4.1-mini",
+            model: "gpt-4o-mini",
             max_tokens: 180,
             temperature: 0.7,
             messages: [{ role: "user", content: prompt }]
