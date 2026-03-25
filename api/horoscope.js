@@ -28,31 +28,40 @@ export default async function handler(req, res) {
 
     const rows = sheetData.data.values;
 
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ error: "No data found" });
+    }
+
     let rowIndex = -1;
     let person = null;
 
+    /* BUSCAR PERSONA PRINCIPAL (UID) */
     for (let i = 1; i < rows.length; i++) {
 
-      const orderId = rows[i][0] || "";
+      const orderId = (rows[i][0] || "").toString().trim();
 
-      if (orderId.includes(uid)) {
+      // Usamos comparación exacta para evitar errores entre ID "1" e ID "10"
+      if (orderId === uid?.toString().trim()) {
 
         rowIndex = i + 1;
 
+        // Blindaje: Si la fila es corta, rellenamos con vacíos para que no de error
+        const safeRow = rows[i].concat(Array(20).fill(""));
+
         person = {
-          name: rows[i][4] || "",
-          birth_date: rows[i][5] || "",
-          birth_hour: rows[i][6] || "",
-          birth_place: rows[i][7] || "",
-          sun: rows[i][8] || "",
-          moon: rows[i][9] || "",
-          rising: rows[i][10] || "",
-          message_daily: rows[i][12] || "",
-          message_date: rows[i][13] || "",
-          affinity_daily: rows[i][14] || "",
-          affinity_date: rows[i][15] || "",
-          pair_message: rows[i][17] || "",
-          pair_date: rows[i][18] || ""
+          name: safeRow[4] || "",
+          birth_date: safeRow[5] || "",
+          birth_hour: safeRow[6] || "",
+          birth_place: safeRow[7] || "",
+          sun: safeRow[8] || "",
+          moon: safeRow[9] || "",
+          rising: safeRow[10] || "",
+          message_daily: safeRow[12] || "",
+          message_date: safeRow[13] || "",
+          affinity_daily: safeRow[14] || "",
+          affinity_date: safeRow[15] || "",
+          pair_message: safeRow[17] || "", // Columna R
+          pair_date: safeRow[18] || ""    // Columna S
         };
 
         break;
@@ -75,33 +84,26 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA */
+    /* 🔮 READPAIR — SOLO LECTURA (CORREGIDO) */
 
     if (type === "readpair") {
 
-      if (!other) {
-        return res.status(400).json({ error: "Missing second UID" });
-      }
+      // Eliminamos el bloqueo "if(!other)" para que el botón funcione solo con tu UID
+      let personBMessage = "";
 
-      let personB = null;
-
-      for (let i = 1; i < rows.length; i++) {
-
-        const orderId = rows[i][0] || "";
-
-        if (orderId.includes(other)) {
-
-          personB = {
-            pair_message: rows[i][17] || ""
-          };
-
-          break;
+      if (other) {
+        for (let i = 1; i < rows.length; i++) {
+          const orderIdB = (rows[i][0] || "").toString().trim();
+          if (orderIdB === other.toString().trim()) {
+            personBMessage = rows[i][17] || "";
+            break;
+          }
         }
       }
 
       const mensaje =
         person.pair_message ||
-        personB?.pair_message ||
+        personBMessage ||
         "No hay conexión guardada.";
 
       return res.status(200).json({
@@ -127,19 +129,20 @@ export default async function handler(req, res) {
 
       for (let i = 1; i < rows.length; i++) {
 
-        const orderId = rows[i][0] || "";
+        const orderIdB = (rows[i][0] || "").toString().trim();
 
-        if (orderId.includes(other)) {
+        if (orderIdB === other.toString().trim()) {
 
           rowIndexB = i + 1;
+          const safeRowB = rows[i].concat(Array(20).fill(""));
 
           personB = {
-            name: rows[i][4] || "",
-            sun: rows[i][8] || "",
-            moon: rows[i][9] || "",
-            rising: rows[i][10] || "",
-            pair_message: rows[i][17] || "",
-            pair_date: rows[i][18] || ""
+            name: safeRowB[4] || "",
+            sun: safeRowB[8] || "",
+            moon: safeRowB[9] || "",
+            rising: safeRowB[10] || "",
+            pair_message: safeRowB[17] || "",
+            pair_date: safeRowB[18] || ""
           };
 
           break;
