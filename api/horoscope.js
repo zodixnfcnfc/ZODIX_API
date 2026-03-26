@@ -83,32 +83,35 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA (CORREGIDO PARA EL BOTÓN DIRECTO) */
+    /* 🔮 READPAIR — SOLO LECTURA (MODIFICADO PARA CADUCAR AL DÍA SIGUIENTE) */
 
     if (type === "readpair") {
 
-      let personBMessage = "";
+      let finalMessage = "No hay conexión guardada.";
 
-      if (other) {
+      // 1. Miramos si la persona principal tiene una conexión DE HOY
+      if (person.pair_date === today && person.pair_message) {
+        finalMessage = person.pair_message;
+      } 
+      // 2. Si no, miramos si hay un "other" y si su mensaje es DE HOY
+      else if (other) {
         for (let i = 1; i < rows.length; i++) {
           const orderIdB = (rows[i][0] || "").toString().trim();
           if (orderIdB === other.toString().trim()) {
-            personBMessage = rows[i][17] || "";
+            const dateB = rows[i][18] || "";
+            const msgB = rows[i][17] || "";
+            if (dateB === today) {
+              finalMessage = msgB;
+            }
             break;
           }
         }
       }
 
-      // Si no hay "other", devolvemos lo que tenga la persona principal
-      const mensaje =
-        person.pair_message ||
-        personBMessage ||
-        "No hay conexión guardada.";
-
       return res.status(200).json({
         choices: [{
           message: {
-            content: mensaje
+            content: finalMessage
           }
         }]
       });
