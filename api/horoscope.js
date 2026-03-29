@@ -193,7 +193,7 @@ ${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})
 
 🔗 Conexión energética hoy: ${percentage}%
 
-✨ Frase corta positiva.
+✨ Frase corta coherente con el porcentaje: si es alto, que sea entusiasta; si es bajo, que sea una reflexión constructiva sobre el espacio personal o la paciencia, pero siempre con un tono algo místico y alentador.
 
 🔥 Consejo breve.
 
