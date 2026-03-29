@@ -7,9 +7,7 @@ export default async function handler(req, res) {
   try {
 
     const { uid, type, other } = req.query;
-
     const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
-
     const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
 
     const auth = new google.auth.JWT(
@@ -83,17 +81,15 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA (MODIFICADO PARA CADUCAR AL DÍA SIGUIENTE) */
+    /* 🔮 READPAIR — SOLO LECTURA */
 
     if (type === "readpair") {
 
       let finalMessage = "No hay conexión guardada.";
 
-      // 1. Miramos si la persona principal tiene una conexión DE HOY
       if (person.pair_date === today && person.pair_message) {
         finalMessage = person.pair_message;
       } 
-      // 2. Si no, miramos si hay un "other" y si su mensaje es DE HOY
       else if (other) {
         for (let i = 1; i < rows.length; i++) {
           const orderIdB = (rows[i][0] || "").toString().trim();
@@ -118,7 +114,7 @@ export default async function handler(req, res) {
 
     }
 
-    /* 🔗 PAIR — GENERAR Y GUARDAR (MODIFICADO PARA MULTI-PERSONA) */
+    /* 🔗 PAIR — GENERAR Y GUARDAR */
 
     if (type === "pair") {
 
@@ -155,7 +151,6 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
-      /* SI YA EXISTE CON ESTA PERSONA CONCRETA */
       const yaExisteConEste = person.pair_message && 
                              person.pair_date === today && 
                              person.pair_message.toUpperCase().includes(personB.name.toUpperCase());
@@ -170,15 +165,23 @@ export default async function handler(req, res) {
         });
       }
 
+      // --- NUEVO CÁLCULO DE PORCENTAJE (PARA EVITAR DESCENSO LINEAL) ---
       const idsOrdenados = [uid, other].sort().join("");
-      const seed = idsOrdenados + today;
-      let hash = 0;
-      for (let i = 0; i < seed.length; i++) {
-        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+      const seedString = idsOrdenados + today;
+      
+      let h = 0;
+      for (let i = 0; i < seedString.length; i++) {
+          h = Math.imul(31, h) + seedString.charCodeAt(i) | 0;
       }
-      const percentage = 30 + Math.abs(hash % 71);
 
-      // He ajustado este bloque para que no haya saltos de línea dobles entre nombres
+      const t = h + 0x6D2B79F5;
+      const a = Math.imul(t ^ (t >>> 15), t | 1);
+      const b = a ^ (a + Math.imul(a ^ (a >>> 7), a | 61));
+      const finalRandom = ((b ^ (b >>> 14)) >>> 0) / 4294967296;
+
+      const percentage = Math.floor(30 + (finalRandom * 71));
+      // ----------------------------------------------------------------
+
       const prompt = `
 Genera una afinidad entre dos personas.
 
