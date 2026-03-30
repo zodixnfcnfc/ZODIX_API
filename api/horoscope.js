@@ -7,7 +7,9 @@ export default async function handler(req, res) {
   try {
 
     const { uid, type, other } = req.query;
+
     const sheetId = "1asctglNYLWEEWaFcGPoWFFs--wOz21f7LXLwLrLQa-0";
+
     const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
 
     const auth = new google.auth.JWT(
@@ -19,10 +21,9 @@ export default async function handler(req, res) {
 
     const sheets = google.sheets({ version: "v4", auth });
 
-    // Ampliado a U para leer las nuevas columnas
     const sheetData = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "A:U"
+      range: "A:S"
     });
 
     const rows = sheetData.data.values;
@@ -43,8 +44,8 @@ export default async function handler(req, res) {
 
         rowIndex = i + 1;
 
-        // Blindaje para evitar errores si la fila es corta (ajustado a 21 columnas)
-        const safeRow = rows[i].concat(Array(21).fill(""));
+        // Blindaje para evitar errores si la fila es corta
+        const safeRow = rows[i].concat(Array(20).fill(""));
 
         person = {
           name: safeRow[4] || "",
@@ -59,9 +60,7 @@ export default async function handler(req, res) {
           affinity_daily: safeRow[14] || "",
           affinity_date: safeRow[15] || "",
           pair_message: safeRow[17] || "",
-          pair_date: safeRow[18] || "",
-          code_message: safeRow[19] || "", // Columna T
-          code_day: safeRow[20] || ""      // Columna U
+          pair_date: safeRow[18] || ""
         };
 
         break;
@@ -84,15 +83,17 @@ export default async function handler(req, res) {
       year: "numeric"
     });
 
-    /* 🔮 READPAIR — SOLO LECTURA */
+    /* 🔮 READPAIR — SOLO LECTURA (MODIFICADO PARA CADUCAR AL DÍA SIGUIENTE) */
 
     if (type === "readpair") {
 
       let finalMessage = "No hay conexión guardada.";
 
+      // 1. Miramos si la persona principal tiene una conexión DE HOY
       if (person.pair_date === today && person.pair_message) {
         finalMessage = person.pair_message;
       } 
+      // 2. Si no, miramos si hay un "other" y si su mensaje es DE HOY
       else if (other) {
         for (let i = 1; i < rows.length; i++) {
           const orderIdB = (rows[i][0] || "").toString().trim();
@@ -117,7 +118,7 @@ export default async function handler(req, res) {
 
     }
 
-    /* 🔗 PAIR — GENERAR Y GUARDAR */
+    /* 🔗 PAIR — GENERAR Y GUARDAR (MODIFICADO PARA MULTI-PERSONA) */
 
     if (type === "pair") {
 
@@ -154,6 +155,7 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "Second person not found" });
       }
 
+      /* SI YA EXISTE CON ESTA PERSONA CONCRETA */
       const yaExisteConEste = person.pair_message && 
                              person.pair_date === today && 
                              person.pair_message.toUpperCase().includes(personB.name.toUpperCase());
@@ -169,20 +171,14 @@ export default async function handler(req, res) {
       }
 
       const idsOrdenados = [uid, other].sort().join("");
-      const seedString = idsOrdenados + today;
-      
-      let h = 0;
-      for (let i = 0; i < seedString.length; i++) {
-          h = Math.imul(31, h) + seedString.charCodeAt(i) | 0;
+      const seed = idsOrdenados + today;
+      let hash = 0;
+      for (let i = 0; i < seed.length; i++) {
+        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
       }
+      const percentage = 30 + Math.abs(hash % 71);
 
-      const t = h + 0x6D2B79F5;
-      const a = Math.imul(t ^ (t >>> 15), t | 1);
-      const b = a ^ (a + Math.imul(a ^ (a >>> 7), a | 61));
-      const finalRandom = ((b ^ (b >>> 14)) >>> 0) / 4294967296;
-
-      const percentage = Math.floor(30 + (finalRandom * 71));
-
+      // He ajustado este bloque para que no haya saltos de línea dobles entre nombres
       const prompt = `
 Genera una afinidad entre dos personas.
 
@@ -194,9 +190,12 @@ ${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})
 
 🔗 Conexión energética hoy: ${percentage}%
 
-✨ Frase corta coherente con el porcentaje.
+✨ Frase corta positiva.
+
 🔥 Consejo breve.
+
 💫 Mensaje final corto.
+
 Fecha: ${todayFormatted}
 `;
 
@@ -219,6 +218,8 @@ Fecha: ${todayFormatted}
 
       const data = await response.json();
       const message = data.choices[0].message.content;
+
+      /* GUARDAR EN AMBOS */
 
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
@@ -246,29 +247,33 @@ Fecha: ${todayFormatted}
 
     }
 
-    /* 🔢 CÓDIGO DEL DÍA — NUEVA FUNCIÓN */
+    /* ⚡ ENERGÍA — intacto */
 
-    if (type === "daily_code") {
-      
-      if (person.code_day === today && person.code_message) {
-        return res.status(200).json(JSON.parse(person.code_message));
+    if (type !== "affinity") {
+
+      if (person.message_date === today && person.message_daily) {
+        return res.status(200).json({
+          choices: [{ message: { content: person.message_daily } }]
+        });
       }
 
       const prompt = `
-Genera el "Código del Día" místico para ${person.name} basado en su Sol: ${person.sun} y Ascendente: ${person.rising}.
-FECHA: ${todayFormatted}
+Genera un mensaje diario de energía emocional.
 
-RESPONDE ÚNICAMENTE EN FORMATO JSON PURO, sin textos extra, siguiendo esta estructura:
-{
-  "numero": "Un número del 1 al 22",
-  "numero_desc": "Breve frase mística sobre este número",
-  "color": "Un color evocador",
-  "color_desc": "Qué energía aporta este color hoy",
-  "momento": "Un rango de 2 horas (ej: 14:00 - 16:00)",
-  "momento_desc": "Por qué es tu momento ideal hoy",
-  "elemento": "Agua, Fuego, Tierra o Aire",
-  "elemento_desc": "Cómo fluir con este elemento"
-}
+Hola ${person.name},
+
+Hoy, ${todayFormatted}
+
+✨ Frase potente.
+
+🔥 Acción concreta.
+
+💫 Frase final.
+
+DATOS:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
 `;
 
       const response = await fetch(
@@ -281,29 +286,29 @@ RESPONDE ÚNICAMENTE EN FORMATO JSON PURO, sin textos extra, siguiendo esta estr
           },
           body: JSON.stringify({
             model: "gpt-4.1-mini",
-            temperature: 0.7,
             messages: [{ role: "user", content: prompt }]
           })
         }
       );
 
       const data = await response.json();
-      const codeDataText = data.choices[0].message.content;
-      
-      // Guardar el JSON como string en Columna T y la fecha en U
+      const message = data.choices[0].message.content;
+
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
-        range: `T${rowIndex}:U${rowIndex}`,
+        range: `M${rowIndex}:N${rowIndex}`,
         valueInputOption: "RAW",
         requestBody: {
-          values: [[codeDataText, today]]
+          values: [[message, today]]
         }
       });
 
-      return res.status(200).json(JSON.parse(codeDataText));
+      return res.status(200).json({
+        choices: [{ message: { content: message } }]
+      });
     }
 
-    /* 💫 AFINIDAD */
+    /* 💫 AFINIDAD — intacto */
 
     if (type === "affinity") {
 
@@ -314,10 +319,30 @@ RESPONDE ÚNICAMENTE EN FORMATO JSON PURO, sin textos extra, siguiendo esta estr
       }
 
       const prompt = `
-Genera una afinidad diaria basada en los DATOS ASTRALES.
-REGLA DE ORO: El mensaje DEBE empezar con: "Hoy, ${todayFormatted}, conectas especialmente con:" 
+Genera una afinidad diaria basada en los DATOS ASTRALES del final.
 
-DATOS ASTRALES:
+REGLA DE ORO: El mensaje DEBE empezar obligatoriamente con la frase: "Hoy, ${todayFormatted}, conectas especialmente con:" 
+IMPORTANTE: No incluyas los "DATOS ASTRALES" en tu respuesta, úsalos solo como referencia.
+
+FORMATO DE RESPUESTA:
+Hoy, ${todayFormatted}, conectas especialmente con:
+
+🔥 [SIGNO] → frase corta positiva.
+
+💫 [SIGNO] → frase corta práctica.
+
+⚡ [SIGNO] → frase corta creativa.
+
+⚠️ Evita hoy:
+
+♐ [SIGNO] → advertencia breve.
+
+💡 Consejo:
+
+Frase final clara y directa.
+
+---
+DATOS ASTRALES (NO ESCRIBIR ESTO EN LA RESPUESTA):
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
@@ -357,55 +382,13 @@ Ascendente: ${person.rising}
       });
     }
 
-    /* ⚡ ENERGÍA (Default) */
-
-    if (person.message_date === today && person.message_daily) {
-      return res.status(200).json({
-        choices: [{ message: { content: person.message_daily } }]
-      });
-    }
-
-    const promptEnergia = `
-Genera un mensaje diario de energía para ${person.name}.
-Hoy, ${todayFormatted}
-Sol: ${person.sun} | Luna: ${person.moon}
-`;
-
-    const responseEnergia = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "gpt-4.1-mini",
-          messages: [{ role: "user", content: promptEnergia }]
-        })
-      }
-    );
-
-    const dataEnergia = await responseEnergia.json();
-    const messageEnergia = dataEnergia.choices[0].message.content;
-
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: sheetId,
-      range: `M${rowIndex}:N${rowIndex}`,
-      valueInputOption: "RAW",
-      requestBody: {
-        values: [[messageEnergia, today]]
-      }
-    });
-
-    return res.status(200).json({
-      choices: [{ message: { content: messageEnergia } }]
-    });
-
   } catch (error) {
+
     res.status(500).json({
       error: "server_error",
       message: error.toString()
     });
+
   }
+
 }
