@@ -72,7 +72,7 @@ export default async function handler(req, res) {
       return res.status(200).json(person);
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Madrid" });
 
     const todayFormatted = new Date().toLocaleDateString("es-ES", {
       day: "numeric",
@@ -96,6 +96,8 @@ export default async function handler(req, res) {
 Genera el "Código del Día" místico para ${person.name} basado en su Sol: ${person.sun} y Ascendente: ${person.rising}.
 FECHA: ${todayFormatted}
 
+INSTRUCCIÓN CRÍTICA: Elige combinaciones de números, colores y momentos COMPLETAMENTE AL AZAR. No repitas patrones comunes.
+
 RESPONDE ÚNICAMENTE EN FORMATO JSON PURO, sin textos extra, siguiendo esta estructura exacta:
 {
   "numero": "Un número del 1 al 22",
@@ -109,21 +111,21 @@ RESPONDE ÚNICAMENTE EN FORMATO JSON PURO, sin textos extra, siguiendo esta estr
 }
 `;
 
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            temperature: 0.7,
-            messages: [{ role: "user", content: promptCode }]
-          })
-        }
-      );
+const response = await fetch(
+  "https://api.openai.com/v1/chat/completions",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini", // Corregido: gpt-4o-mini
+      temperature: 1.0,      // Subimos a 1.0 para que sea mucho más creativo y no repita
+      messages: [{ role: "user", content: promptCode }]
+    })
+  }
+);
 
       const data = await response.json();
       const codeDataText = data.choices[0].message.content;
