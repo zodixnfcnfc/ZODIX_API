@@ -262,72 +262,73 @@ Fecha: ${todayFormatted}
     }
 
     /* 💫 AFINIDAD */
-    if (type === "affinity") {
-      if (person.affinity_date === today && person.affinity_daily) {
-        return res.status(200).json({
-          choices: [{ message: { content: person.affinity_daily } }]
-        });
-      }
+if (type === "affinity") {
+  if (person.affinity_date === today && person.affinity_daily) {
+    return res.status(200).json({
+      choices: [{ message: { content: person.affinity_daily } }]
+    });
+  }
 
-      const prompt = `
+  // Añadimos una instrucción de variedad y aleatoriedad
+  const prompt = `
 Genera una afinidad diaria basada en los DATOS ASTRALES del final.
 
-REGLA DE ORO: El mensaje DEBE empezar obligatoriamente con la frase: "Hoy, ${todayFormatted}, conectas especialmente con:" 
-IMPORTANTE: No incluyas los "DATOS ASTRALES" en tu respuesta, úsalos solo como referencia.
+REGLA DE ORO: El mensaje DEBE empezar con: "Hoy, ${todayFormatted}, conectas especialmente con:" 
+
+INSTRUCCIONES DE VARIEDAD:
+1. No elijas siempre los mismos signos. Rota entre los 12 signos del zodiaco de forma creativa.
+2. Cambia el tono de los consejos (un día enfocado al trabajo, otro al amor, otro a la salud o la introspección).
+3. Asegúrate de que los signos elegidos hoy NO sean los de fuego de siempre (evita repetir el patrón Leo/Aries/Capricornio a menos que sea muy necesario).
 
 FORMATO DE RESPUESTA:
 Hoy, ${todayFormatted}, conectas especialmente con:
 
 🔥 [SIGNO] → frase corta positiva.
-
 💫 [SIGNO] → frase corta práctica.
-
 ⚡ [SIGNO] → frase corta creativa.
 
 ⚠️ Evita hoy:
-
-♐ [SIGNO] → advertencia breve.
+[SIGNO] → advertencia breve sobre un rasgo negativo a evitar hoy.
 
 💡 Consejo:
-
-Frase final clara y directa.
+Frase final inspiradora y distinta a la de ayer.
 
 ---
-DATOS ASTRALES (NO ESCRIBIR ESTO EN LA RESPUESTA):
+DATOS ASTRALES:
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
 `;
 
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            max_tokens: 180,
-            temperature: 0.7,
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
-
-      const data = await response.json();
-      const message = data.choices[0].message.content;
-
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `O${rowIndex}:P${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: { values: [[message, today]] }
-      });
-
-      return res.status(200).json({ choices: [{ message: { content: message } }] });
+  const response = await fetch(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini", // Sugerencia: Asegúrate de que el nombre del modelo sea correcto (gpt-4o-mini es el estándar actual)
+        max_tokens: 250,
+        temperature: 1.0, // Subimos a 1.0 para maximizar la variedad cada día
+        messages: [{ role: "system", content: "Eres un astrólogo experto, creativo y muy variado que nunca se repite." }, { role: "user", content: prompt }]
+      })
     }
+  );
+
+  const data = await response.json();
+  const message = data.choices[0].message.content;
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: sheetId,
+    range: `O${rowIndex}:P${rowIndex}`,
+    valueInputOption: "RAW",
+    requestBody: { values: [[message, today]] }
+  });
+
+  return res.status(200).json({ choices: [{ message: { content: message } }] });
+}
 
     /* ⚡ ENERGÍA (Por defecto) */
     if (type !== "affinity") {
