@@ -269,32 +269,32 @@ if (type === "affinity") {
     });
   }
 
-  // Añadimos una instrucción de variedad y aleatoriedad
-  const prompt = `
+  // He blindado el prompt con instrucciones de formato muy estrictas
+  const promptAffinity = `
 Genera una afinidad diaria basada en los DATOS ASTRALES del final.
 
-REGLA DE ORO: El mensaje DEBE empezar con: "Hoy, ${todayFormatted}, conectas especialmente con:" 
+**INSTRUCCIÓN DE FORMATO CRUCIAL (Respeta los espacios en blanco y saltos de línea):**
+Tu respuesta debe comenzar exactamente con la frase: "Hoy, ${todayFormatted}, conectas especialmente con:"
 
-INSTRUCCIONES DE VARIEDAD:
-1. No elijas siempre los mismos signos. Rota entre los 12 signos del zodiaco de forma creativa.
-2. Cambia el tono de los consejos (un día enfocado al trabajo, otro al amor, otro a la salud o la introspección).
-3. Asegúrate de que los signos elegidos hoy NO sean los de fuego de siempre (evita repetir el patrón Leo/Aries/Capricornio a menos que sea muy necesario).
+El mensaje debe tener esta estructura exacta:
 
-FORMATO DE RESPUESTA:
 Hoy, ${todayFormatted}, conectas especialmente con:
 
-🔥 [SIGNO] → frase corta positiva.
-💫 [SIGNO] → frase corta práctica.
-⚡ [SIGNO] → frase corta creativa.
+🔥 [UN SIGNO AL AZAR] → frase corta positiva.
+💫 [UN SIGNO DIFERENTE AL AZAR] → frase corta práctica.
+⚡ [UN SIGNO DIFERENTE AL AZAR] → frase corta creativa.
 
 ⚠️ Evita hoy:
-[SIGNO] → advertencia breve sobre un rasgo negativo a evitar hoy.
+
+[UN SIGNO DIFERENTE AL AZAR CON SU EMOJI DE SIGNO] → advertencia breve sobre un rasgo negativo a evitar hoy.
 
 💡 Consejo:
-Frase final inspiradora y distinta a la de ayer.
+Frase final inspiradora y totalmente distinta a la de ayer.
+
+**REGLA DE ROTACIÓN:** No elijas siempre los mismos signos (ej: no elijas siempre Tauro, Libra, Leo, Sagitario). Rota entre los 12 signos del zodiaco de forma creativa. Cambia el tono de los consejos.
 
 ---
-DATOS ASTRALES:
+DATOS ASTRALES (solo para referencia):
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
@@ -309,10 +309,10 @@ Ascendente: ${person.rising}
         "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini", // Sugerencia: Asegúrate de que el nombre del modelo sea correcto (gpt-4o-mini es el estándar actual)
-        max_tokens: 250,
+        model: "gpt-4o-mini", // Asegúrate de que el nombre del modelo sea correcto
+        max_tokens: 300, // He aumentado un poco para no cortar los textos largos con el formato
         temperature: 1.0, // Subimos a 1.0 para maximizar la variedad cada día
-        messages: [{ role: "system", content: "Eres un astrólogo experto, creativo y muy variado que nunca se repite." }, { role: "user", content: prompt }]
+        messages: [{ role: "system", content: "Eres un astrólogo experto, creativo y muy variado. Sigue el formato estructural dado exactamente, con las líneas en blanco y la ubicación de las etiquetas 'Evita hoy:' y 'Consejo:' como cabeceras independientes en sus propias líneas, con espacio antes y después, como se muestra en el ejemplo de formato." }, { role: "user", content: promptAffinity }]
       })
     }
   );
@@ -320,6 +320,7 @@ Ascendente: ${person.rising}
   const data = await response.json();
   const message = data.choices[0].message.content;
 
+  // Guardamos el mensaje final en la columna O y la fecha en P
   await sheets.spreadsheets.values.update({
     spreadsheetId: sheetId,
     range: `O${rowIndex}:P${rowIndex}`,
