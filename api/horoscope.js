@@ -339,31 +339,29 @@ REGLAS:
   return res.status(200).json({ choices: [{ message: { content: message } }] });
 }
 
-    /* ⚡ ENERGÍA (Por defecto) */
+/* ⚡ ENERGÍA (Por defecto) */
     if (type !== "affinity") {
+      // Si ya existe el mensaje de hoy, lo devolvemos
       if (person.message_date === today && person.message_daily) {
-        return res.status(200).json({
-          choices: [{ message: { content: person.message_daily } }]
-        });
+        try {
+          return res.status(200).json(JSON.parse(person.message_daily));
+        } catch (e) {
+          // Si no es JSON, seguimos para regenerar
+        }
       }
 
       const prompt = `
-Genera un mensaje diario de energía emocional.
+Actúa como un experto astrólogo para ZODIX. Genera la "Energía de Hoy" para ${person.name}.
+DATOS: Sol: ${person.sun}, Luna: ${person.moon}, Ascendente: ${person.rising}.
+FECHA: ${todayFormatted}
 
-Hola ${person.name},
-
-Hoy, ${todayFormatted}
-
-✨ Frase potente.
-
-🔥 Acción concreta.
-
-💫 Frase final.
-
-DATOS:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
+RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
+{
+  "sintonia": "Un número del 1 al 100 que represente su Nivel de Sintonía Astral hoy",
+  "frase_potente": "Una frase corta y poderosa de inicio",
+  "accion": "Una acción concreta para hoy",
+  "mensaje_final": "Un cierre místico corto"
+}
 `;
 
       const response = await fetch(
@@ -375,25 +373,26 @@ Ascendente: ${person.rising}
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4.1-mini",
+            model: "gpt-4o-mini",
+            temperature: 0.8,
             messages: [{ role: "user", content: prompt }]
           })
         }
       );
 
       const data = await response.json();
-      const message = data.choices[0].message.content;
+      const energyDataText = data.choices[0].message.content;
 
+      // Guardamos el JSON string en la columna M y la fecha en N
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `M${rowIndex}:N${rowIndex}`,
         valueInputOption: "RAW",
-        requestBody: { values: [[message, today]] }
+        requestBody: { values: [[energyDataText, today]] }
       });
 
-      return res.status(200).json({ choices: [{ message: { content: message } }] });
+      return res.status(200).json(JSON.parse(energyDataText));
     }
-
   } catch (error) {
     res.status(500).json({
       error: "server_error",
