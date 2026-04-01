@@ -339,34 +339,31 @@ REGLAS:
   return res.status(200).json({ choices: [{ message: { content: message } }] });
 }
 
-/* ⚡ ENERGÍA (Por defecto) */
+    /* ⚡ ENERGÍA (Por defecto) */
     if (type !== "affinity") {
-      // 1. Intentamos devolver lo que ya está guardado en Google Sheets
       if (person.message_date === today && person.message_daily) {
-        try {
-          return res.status(200).json(JSON.parse(person.message_daily));
-        } catch (e) {
-          // Si el formato guardado no fuera JSON, continuamos para regenerar
-        }
+        return res.status(200).json({
+          choices: [{ message: { content: person.message_daily } }]
+        });
       }
 
-      // 2. Prompt optimizado: Mensajes cortos, potentes y formato JSON
       const prompt = `
-Actúa como un guía astral moderno para ZODIX. Genera la energía diaria para ${person.name}.
-DATOS: Sol: ${person.sun}, Luna: ${person.moon}, Ascendente: ${person.rising}.
+Genera un mensaje diario de energía emocional.
 
-INSTRUCCIONES DE ESTILO:
-- Frases cortas y directas (máximo 15 palabras por sección).
-- Tono místico pero motivador.
-- Evita párrafos largos.
+Hola ${person.name},
 
-RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
-{
-  "sintonia": "Un número del 1 al 100 (Nivel de Sintonía Astral)",
-  "frase_potente": "Una frase de impacto para empezar",
-  "accion": "Una acción clara y breve para hoy",
-  "mensaje_final": "Un cierre de 5-6 palabras"
-}
+Hoy, ${todayFormatted}
+
+✨ Frase potente.
+
+🔥 Acción concreta.
+
+💫 Frase final.
+
+DATOS:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
 `;
 
       const response = await fetch(
@@ -378,34 +375,25 @@ RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
-            temperature: 0.8,
+            model: "gpt-4.1-mini",
             messages: [{ role: "user", content: prompt }]
           })
         }
       );
 
       const data = await response.json();
-      
-      // Si la API de OpenAI devuelve error, lo manejamos
-      if (!data.choices || data.choices.length === 0) {
-        return res.status(500).json({ error: "Error generando energía" });
-      }
+      const message = data.choices[0].message.content;
 
-      const energyDataText = data.choices[0].message.content;
-
-      // 3. Guardar el JSON en la columna M y la fecha en N para no gastar API cada vez
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `M${rowIndex}:N${rowIndex}`,
         valueInputOption: "RAW",
-        requestBody: { values: [[energyDataText, today]] }
+        requestBody: { values: [[message, today]] }
       });
 
-      // 4. Enviamos el JSON parseado al frontend
-      return res.status(200).json(JSON.parse(energyDataText));
+      return res.status(200).json({ choices: [{ message: { content: message } }] });
     }
-    
+
   } catch (error) {
     res.status(500).json({
       error: "server_error",
