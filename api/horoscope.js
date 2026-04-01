@@ -341,26 +341,31 @@ REGLAS:
 
 /* ⚡ ENERGÍA (Por defecto) */
     if (type !== "affinity") {
-      // Si ya existe el mensaje de hoy, lo devolvemos
+      // 1. Intentamos devolver lo que ya está guardado en Google Sheets
       if (person.message_date === today && person.message_daily) {
         try {
           return res.status(200).json(JSON.parse(person.message_daily));
         } catch (e) {
-          // Si no es JSON, seguimos para regenerar
+          // Si el formato guardado no fuera JSON, continuamos para regenerar
         }
       }
 
+      // 2. Prompt optimizado: Mensajes cortos, potentes y formato JSON
       const prompt = `
-Actúa como un experto astrólogo para ZODIX. Genera la "Energía de Hoy" para ${person.name}.
+Actúa como un guía astral moderno para ZODIX. Genera la energía diaria para ${person.name}.
 DATOS: Sol: ${person.sun}, Luna: ${person.moon}, Ascendente: ${person.rising}.
-FECHA: ${todayFormatted}
+
+INSTRUCCIONES DE ESTILO:
+- Frases cortas y directas (máximo 15 palabras por sección).
+- Tono místico pero motivador.
+- Evita párrafos largos.
 
 RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
 {
-  "sintonia": "Un número del 1 al 100 que represente su Nivel de Sintonía Astral hoy",
-  "frase_potente": "Una frase corta y poderosa de inicio",
-  "accion": "Una acción concreta para hoy",
-  "mensaje_final": "Un cierre místico corto"
+  "sintonia": "Un número del 1 al 100 (Nivel de Sintonía Astral)",
+  "frase_potente": "Una frase de impacto para empezar",
+  "accion": "Una acción clara y breve para hoy",
+  "mensaje_final": "Un cierre de 5-6 palabras"
 }
 `;
 
@@ -381,9 +386,15 @@ RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
       );
 
       const data = await response.json();
+      
+      // Si la API de OpenAI devuelve error, lo manejamos
+      if (!data.choices || data.choices.length === 0) {
+        return res.status(500).json({ error: "Error generando energía" });
+      }
+
       const energyDataText = data.choices[0].message.content;
 
-      // Guardamos el JSON string en la columna M y la fecha en N
+      // 3. Guardar el JSON en la columna M y la fecha en N para no gastar API cada vez
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `M${rowIndex}:N${rowIndex}`,
@@ -391,8 +402,10 @@ RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
         requestBody: { values: [[energyDataText, today]] }
       });
 
+      // 4. Enviamos el JSON parseado al frontend
       return res.status(200).json(JSON.parse(energyDataText));
     }
+    
   } catch (error) {
     res.status(500).json({
       error: "server_error",
