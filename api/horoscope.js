@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 
-export default async function handler(req, res) {
+export default async functio<n handler(req, res) {
 
   res.setHeader("Access-Control-Allow-Origin", "*");
 
@@ -223,8 +223,6 @@ ${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})
 
 Fecha: ${todayFormatted}
 `;
-
-// ... resto del código (fetch a OpenAI y sheets.spreadsheets.values.update) igual ...
 
       const response = await fetch(
         "https://api.openai.com/v1/chat/completions",
