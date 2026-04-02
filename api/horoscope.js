@@ -297,10 +297,11 @@ Hoy, ${todayFormatted}, conectas especialmente con:
 [Frase final de consejo en su propia línea]
 
 ---
-REGLAS:
+REGLAS CRÍTICAS:
 1. Deja una línea totalmente vacía entre CADA signo.
 2. Deja una línea vacía después de "Evita hoy:" y después de "Consejo:".
 3. Varía los signos, no repitas siempre los mismos de fuego.
+4. PROHIBICIÓN ABSOLUTA: El signo que aparece en "Evita hoy" NO PUEDE ser ninguno de los tres signos con los que se conecta especialmente. Deben ser signos diferentes.
 `;
 
   const response = await fetch(
