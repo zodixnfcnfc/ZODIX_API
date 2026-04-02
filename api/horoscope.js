@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     // 1. AMPLIAMOS EL RANGO A "U" para leer las nuevas columnas
     const sheetData = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "A:U" 
+      range: "A:W" 
     });
 
     const rows = sheetData.data.values;
@@ -40,8 +40,8 @@ export default async function handler(req, res) {
       if (orderId === uid?.toString().trim()) {
         rowIndex = i + 1;
 
-        // Blindaje para 21 columnas (hasta la U)
-        const safeRow = rows[i].concat(Array(21).fill(""));
+// Blindaje para 23 columnas (hasta la W)
+        const safeRow = rows[i].concat(Array(23).fill(""));
 
         person = {
           name: safeRow[4] || "",
@@ -57,13 +57,12 @@ export default async function handler(req, res) {
           affinity_date: safeRow[15] || "",
           pair_message: safeRow[17] || "",
           pair_date: safeRow[18] || "",
-          code_message: safeRow[19] || "", // Columna T
-          code_day: safeRow[20] || ""      // Columna U
+          code_message: safeRow[19] || "", 
+          code_day: safeRow[20] || "",
+          message_long: safeRow[21] || "",      // NUEVA COLUMNA V
+          message_long_date: safeRow[22] || ""  // NUEVA COLUMNA W
         };
-        break;
-      }
-    }
-
+        
     if (!person) {
       return res.status(404).json({ error: "Person not found" });
     }
@@ -339,47 +338,61 @@ REGLAS:
   return res.status(200).json({ choices: [{ message: { content: message } }] });
 }
 
-    /* ⚡ ENERGÍA (Por defecto) */
-    if (type !== "affinity") {
-      if (person.message_date === today && person.message_daily) {
-        return res.status(200).json({
-          choices: [{ message: { content: person.message_daily } }]
-        });
+/* ----------------------------------------------------------- */
+    /* 📜 NUEVO: HORÓSCOPO LARGO (Para el botón "Ver más")         */
+    /* ----------------------------------------------------------- */
+    if (type === "energy_long") {
+      if (person.message_long_date === today && person.message_long) {
+        return res.status(200).json({ choices: [{ message: { content: person.message_long } }] });
       }
 
-      const prompt = `
-Genera un mensaje diario de energía emocional.
+      const promptLong = `Redacta un horóscopo extenso y profundo para ${person.name} (Sol: ${person.sun}, Luna: ${person.moon}, Asc: ${person.rising}) para hoy ${todayFormatted}. 
+      Analiza amor, salud y trabajo detalladamente. Mínimo 250 palabras. Usa saltos de línea.`;
 
-Hola ${person.name},
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: promptLong }]
+        })
+      });
 
-Hoy, ${todayFormatted}
+      const data = await response.json();
+      const messageLong = data.choices[0].message.content;
 
-✨ Frase potente.
+      // Guardamos en columnas V y W
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `V${rowIndex}:W${rowIndex}`,
+        valueInputOption: "RAW",
+        requestBody: { values: [[messageLong, today]] }
+      });
 
-🔥 Acción concreta.
+      return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
+    }
 
-💫 Frase final.
+    /* ----------------------------------------------------------- */
+    /* ⚡ ENERGÍA DIARIA (VERSIÓN CORTA POR DEFECTO)               */
+    /* ----------------------------------------------------------- */
+    // Este bloque ahora solo se ejecuta si NO es afinidad ni horóscopo largo
+    if (type !== "affinity" && type !== "energy_long") {
+      if (person.message_date === today && person.message_daily) {
+        return res.status(200).json({ choices: [{ message: { content: person.message_daily } }] });
+      }
 
-DATOS:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-`;
+      const promptShort = `Genera un mensaje de energía diario para ${person.name}. Sol: ${person.sun}, Luna: ${person.moon}. 
+      REGLA: Máximo 3 frases breves. Estilo píldora. 
+      FORMATO: ✨ [Frase] 🔥 [Acción] 💫 [Cierre]`;
 
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: promptShort }]
+        })
+      });
 
       const data = await response.json();
       const message = data.choices[0].message.content;
@@ -395,9 +408,5 @@ Ascendente: ${person.rising}
     }
 
   } catch (error) {
-    res.status(500).json({
-      error: "server_error",
-      message: error.toString()
-    });
-  }
-}
+    // Aquí sigue tu código de error...
+        
