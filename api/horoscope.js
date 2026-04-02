@@ -19,10 +19,10 @@ export default async function handler(req, res) {
 
     const sheets = google.sheets({ version: "v4", auth });
 
-    // 1. AMPLIAMOS EL RANGO A "V" para leer las nuevas columnas
+    // 1. AMPLIAMOS EL RANGO A "U" para leer las nuevas columnas
     const sheetData = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "A:V" 
+      range: "A:U" 
     });
 
     const rows = sheetData.data.values;
@@ -53,7 +53,6 @@ export default async function handler(req, res) {
           rising: safeRow[10] || "",
           message_daily: safeRow[12] || "",
           message_date: safeRow[13] || "",
-          message_long: safeRow[21] || "", // Columna V (Índice 21)
           affinity_daily: safeRow[14] || "",
           affinity_date: safeRow[15] || "",
           pair_message: safeRow[17] || "",
@@ -340,70 +339,61 @@ REGLAS:
   return res.status(200).json({ choices: [{ message: { content: message } }] });
 }
 
-/* ⚡ ENERGÍA (Corto y Largo) */
-if (type === "energy_long" || type !== "affinity") {
-  
-  // Si ya existe hoy, devolvemos el que toque
-  if (person.message_date === today) {
-    if (type === "energy_long") {
-      return res.status(200).json({ choices: [{ message: { content: person.message_long || person.message_daily } }] });
-    } else {
-      return res.status(200).json({ choices: [{ message: { content: person.message_daily } }] });
+    /* ⚡ ENERGÍA (Por defecto) */
+    if (type !== "affinity") {
+      if (person.message_date === today && person.message_daily) {
+        return res.status(200).json({
+          choices: [{ message: { content: person.message_daily } }]
+        });
+      }
+
+      const prompt = `
+Genera un mensaje diario de energía emocional.
+
+Hola ${person.name},
+
+Hoy, ${todayFormatted}
+
+✨ Frase potente.
+
+🔥 Acción concreta.
+
+💫 Frase final.
+
+DATOS:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
+`;
+
+      const response = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4.1-mini",
+            messages: [{ role: "user", content: prompt }]
+          })
+        }
+      );
+
+      const data = await response.json();
+      const message = data.choices[0].message.content;
+
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `M${rowIndex}:N${rowIndex}`,
+        valueInputOption: "RAW",
+        requestBody: { values: [[message, today]] }
+      });
+
+      return res.status(200).json({ choices: [{ message: { content: message } }] });
     }
-  }
 
-  // Si no existe, generamos AMBOS con la IA
-  const prompt = `
-    Genera dos mensajes para ${person.name} (Sol: ${person.sun}, Asc: ${person.rising}).
-    
-    MENSAJE 1 (CORTO): Un párrafo místico de 3 líneas para la energía de hoy.
-    MENSAJE 2 (LARGO): Un horóscopo extendido y detallado con Amor, Salud y Trabajo.
-    
-    RESPONDE ÚNICAMENTE con este formato:
-    CORTO: [texto corto aquí]
-    LARGO: [texto largo aquí]
-  `;
-
-  const aiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }]
-    })
-  });
-
-  const aiData = await aiResponse.json();
-  const rawText = aiData.choices[0].message.content;
-  
-  // Separamos la respuesta de la IA
-  const msgCorto = rawText.split("LARGO:")[0].replace("CORTO:", "").trim();
-  const msgLargo = rawText.split("LARGO:")[1]?.trim() || msgCorto;
-
-  // GUARDAR EN SHEETS: M (Corto), N (Fecha), V (Largo)
-  // Usamos dos updates o un batchUpdate. Lo más simple:
-  await sheets.spreadsheets.values.update({
-    spreadsheetId: sheetId,
-    range: `M${rowIndex}:N${rowIndex}`,
-    valueInputOption: "RAW",
-    requestBody: { values: [[msgCorto, today]] }
-  });
-  
-  await sheets.spreadsheets.values.update({
-    spreadsheetId: sheetId,
-    range: `V${rowIndex}`,
-    valueInputOption: "RAW",
-    requestBody: { values: [[msgLargo]] }
-  });
-
-  return res.status(200).json({ 
-    choices: [{ message: { content: type === "energy_long" ? msgLargo : msgCorto } }] 
-  });
-}
-    
   } catch (error) {
     res.status(500).json({
       error: "server_error",
