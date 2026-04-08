@@ -340,6 +340,7 @@ REGLAS CRÍTICAS:
 
   return res.status(200).json({ choices: [{ message: { content: message } }] });
 }
+  
 /* 🌌 ENERGÍA LARGA (HORÓSCOPO COMPLETO) - CON GUARDADO EN COLUMNA V */
     if (type === "energy_long") {
       
@@ -411,7 +412,6 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
       return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
     }
   
-    
     /* ⚡ ENERGÍA (Por defecto) */
     if (type !== "affinity") {
       if (person.message_date === today && person.message_daily) {
