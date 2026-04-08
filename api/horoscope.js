@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     // 1. AMPLIAMOS EL RANGO A "U" para leer las nuevas columnas
     const sheetData = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "A:U" 
+      range: "A:V" 
     });
 
     const rows = sheetData.data.values;
@@ -59,6 +59,7 @@ export default async function handler(req, res) {
           pair_date: safeRow[18] || "",
           code_message: safeRow[19] || "", // Columna T
           code_day: safeRow[20] || ""      // Columna U
+          message_daily_long: safeRow[21] || "", // Columna V
         };
         break;
       }
@@ -339,8 +340,17 @@ REGLAS CRÍTICAS:
 
   return res.status(200).json({ choices: [{ message: { content: message } }] });
 }
-/* 🌌 ENERGÍA LARGA (HORÓSCOPO COMPLETO) */
+/* 🌌 ENERGÍA LARGA (HORÓSCOPO COMPLETO) - CON GUARDADO EN COLUMNA V */
     if (type === "energy_long") {
+      
+      // 1. Verificamos si ya existe el mensaje largo guardado para HOY
+      // Usamos la fecha de la columna N (person.message_date) que ya tienes
+      if (person.message_date === today && person.energy_long_message) {
+        return res.status(200).json({ 
+          choices: [{ message: { content: person.energy_long_message } }] 
+        });
+      }
+
       const promptLong = `
 Genera un horóscopo profundo y extendido.
 
@@ -376,8 +386,8 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
             "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini", // Usamos gpt-4o-mini que es más estable y rápido
-            max_tokens: 600,      // Suficiente para un texto largo sin cortarse
+            model: "gpt-4o-mini",
+            max_tokens: 800, // Aumentado para que el texto detallado no se corte
             temperature: 0.8,
             messages: [{ role: "user", content: promptLong }]
           })
@@ -387,10 +397,20 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
       const dataLong = await responseLong.json();
       const messageLong = dataLong.choices[0].message.content;
 
-      // Devolvemos el mensaje largo directamente sin guardar en Sheets 
-      // para que sea una lectura fresca y única cada vez.
+      // 2. GUARDAR en la Columna V (que es el índice 21)
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `V${rowIndex}`, 
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [[messageLong]]
+        }
+      });
+
+      // 3. Devolver la respuesta recién generada
       return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
     }
+  
     
     /* ⚡ ENERGÍA (Por defecto) */
     if (type !== "affinity") {
