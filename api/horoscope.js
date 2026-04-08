@@ -339,7 +339,59 @@ REGLAS CRÍTICAS:
 
   return res.status(200).json({ choices: [{ message: { content: message } }] });
 }
+/* 🌌 ENERGÍA LARGA (HORÓSCOPO COMPLETO) */
+    if (type === "energy_long") {
+      const promptLong = `
+Genera un horóscopo profundo y extendido.
 
+Hola ${person.name},
+
+Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
+
+✨ FRASE POTENTE DE HOY:
+(Escribe una frase inspiradora basada en Sol: ${person.sun} y Luna: ${person.moon})
+
+❤️ EN EL AMOR:
+(Desarrollo detallado de 3-4 líneas sobre sentimientos y conexiones)
+
+💼 EN EL TRABAJO Y DINERO:
+(Desarrollo detallado de 3-4 líneas sobre proyectos y abundancia)
+
+🌿 EN TU BIENESTAR:
+(Desarrollo detallado de 3-4 líneas sobre salud y energía mental)
+
+🔥 ACCIÓN CONCRETA PARA EL ÉXITO:
+(Un consejo práctico y místico para ejecutar hoy)
+
+💫 MENSAJE FINAL DEL COSMOS:
+(Una frase de cierre que resuene con su Ascendente: ${person.rising})
+`;
+
+      const responseLong = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini", // Usamos gpt-4o-mini que es más estable y rápido
+            max_tokens: 600,      // Suficiente para un texto largo sin cortarse
+            temperature: 0.8,
+            messages: [{ role: "user", content: promptLong }]
+          })
+        }
+      );
+
+      const dataLong = await responseLong.json();
+      const messageLong = dataLong.choices[0].message.content;
+
+      // Devolvemos el mensaje largo directamente sin guardar en Sheets 
+      // para que sea una lectura fresca y única cada vez.
+      return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
+    }
+    
     /* ⚡ ENERGÍA (Por defecto) */
     if (type !== "affinity") {
       if (person.message_date === today && person.message_daily) {
