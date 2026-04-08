@@ -43,23 +43,16 @@ export default async function handler(req, res) {
         // Blindaje para 21 columnas (hasta la U)
         const safeRow = rows[i].concat(Array(21).fill(""));
 
-        person = {
+person = {
           name: safeRow[4] || "",
-          birth_date: safeRow[5] || "",
-          birth_hour: safeRow[6] || "",
-          birth_place: safeRow[7] || "",
           sun: safeRow[8] || "",
           moon: safeRow[9] || "",
           rising: safeRow[10] || "",
           message_daily: safeRow[12] || "",
           message_date: safeRow[13] || "",
-          affinity_daily: safeRow[14] || "",
-          affinity_date: safeRow[15] || "",
-          pair_message: safeRow[17] || "",
-          pair_date: safeRow[18] || "",
-          code_message: safeRow[19] || "", // Columna T,
-          code_day: safeRow[20] || ""      // Columna U,
-          message_daily_long: safeRow[21] || "", // Columna V,
+          code_message: safeRow[19] || "",
+          code_day: safeRow[20] || "",
+          message_daily_long: safeRow[21] || "" // COLUMNA V
         };
         break;
       }
