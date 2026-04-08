@@ -264,6 +264,7 @@ Fecha: ${todayFormatted}
     }
 
     /* 💫 AFINIDAD */
+/* 💫 AFINIDAD (Versión Compacta) */
 if (type === "affinity") {
   if (person.affinity_date === today && person.affinity_daily) {
     return res.status(200).json({
@@ -272,36 +273,25 @@ if (type === "affinity") {
   }
 
   const promptAffinity = `
-Genera una afinidad diaria basada en los DATOS ASTRALES:
-Sol: ${person.sun}, Luna: ${person.moon}, Ascendente: ${person.rising}.
+Genera una afinidad diaria basada en: Sol: ${person.sun}, Luna: ${person.moon}, Ascendente: ${person.rising}.
 
-INSTRUCCIONES DE FORMATO (OBLIGATORIO):
-Debes usar DOBLE SALTO DE LÍNEA entre cada sección para que el texto sea muy visual y espaciado.
-
-ESTRUCTURA EXACTA:
-
+ESTRUCTURA EXACTA (SIN ESPACIOS EXTRAS):
 Hoy, ${todayFormatted}, conectas especialmente con:
 
 🔥 [SIGNO] → frase corta.
-
 💫 [SIGNO] → frase corta.
-
 ⚡ [SIGNO] → frase corta.
 
 ⚠️ Evita hoy:
-
-[EMOJI DEL SIGNO] [NOMBRE DEL SIGNO] → advertencia breve.
+[EMOJI] [NOMBRE DEL SIGNO] → advertencia breve.
 
 💡 Consejo:
+[Frase final de consejo]
 
-[Frase final de consejo en su propia línea]
-
----
-REGLAS CRÍTICAS:
-1. Deja una línea totalmente vacía entre CADA signo.
-2. Deja una línea vacía después de "Evita hoy:" y después de "Consejo:".
-3. Varía los signos, no repitas siempre los mismos de fuego.
-4. PROHIBICIÓN ABSOLUTA: El signo que aparece en "Evita hoy" NO PUEDE ser ninguno de los tres signos con los que se conecta especialmente. Deben ser signos diferentes.
+REGLAS:
+1. NO dejes líneas en blanco entre los signos.
+2. Usa un salto de línea simple.
+3. El signo de "Evita hoy" debe ser distinto a los otros tres.
 `;
 
   const response = await fetch(
@@ -314,12 +304,12 @@ REGLAS CRÍTICAS:
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        max_tokens: 350, // Aumentado para permitir los saltos de línea extra
-        temperature: 1.0, 
+        max_tokens: 250, 
+        temperature: 0.8, // Bajamos un poco para que sea más disciplinado con el formato
         messages: [
           { 
             role: "system", 
-            content: "Eres un astrólogo experto. Tu prioridad absoluta es el FORMATO VISUAL. Debes separar cada párrafo y cada signo con una línea en blanco obligatoriamente." 
+            content: "Eres un astrólogo experto. Escribe de forma compacta, sin saltos de línea dobles ni espacios innecesarios entre frases." 
           }, 
           { role: "user", content: promptAffinity }
         ]
@@ -327,6 +317,10 @@ REGLAS CRÍTICAS:
     }
   );
 
+  const data = await response.json();
+  const message = data.choices[0].message.content;
+
+  // ... (el resto del código de guardado en Google Sheets se queda igual)
   const data = await response.json();
   const message = data.choices[0].message.content;
 
