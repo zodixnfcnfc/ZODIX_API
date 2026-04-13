@@ -421,23 +421,28 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
       }
 
 const prompt = `
-Genera un mensaje de "Energía Diaria" para ${person.name}. 
-Fecha: ${todayFormatted}. 
-Signos: Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
+const prompt = `
+Genera un mensaje de energía diaria para ZODIX.
 
-### INSTRUCCIONES DE FORMATO:
-1. Comienza con: "Hola ${person.name},"
-2. Continúa con: "Hoy, ${todayFormatted}"
-3. **Tu energía astral:** Genera un porcentaje aleatorio entre 15% y 100%. (Varía el número según la combinación de sus signos y la fecha de hoy para que no sea siempre el mismo).
-4. Añade una frase ultra-corta (máximo 10 palabras) que justifique ese % de energía.
+ESTRUCTURA OBLIGATORIA:
+1. Saludo: Hola ${person.name},
+2. (Línea en blanco)
+3. Fecha: Hoy, ${todayFormatted}
+4. Energía: Tu energia astral de hoy: [Genera un % aleatorio entre 15-100% basado en ${person.sun} y la fecha] + [Frase muy breve relacionada].
+5. (Línea en blanco)
+6. ✨ [Frase potente de una línea]
+7. 🔥 [Acción concreta y corta]
+8. 💫 [Frase final inspiradora]
 
-### CONTENIDO (Mensajes cortos y directos):
-- ✨ **Enfoque:** Una frase potente de una sola línea sobre la vibración del día.
-- 🔥 **Acción:** Un consejo práctico y directo (máximo 15 palabras).
-- 💫 **Cierre:** Una frase inspiradora de cierre de 5 a 8 palabras.
+DATOS DEL USUARIO:
+Sol: ${person.sun}
+Luna: ${person.moon}
+Ascendente: ${person.rising}
 
-### TONO:
-Cercano, místico pero moderno (estilo ZODIX), sin rellenos innecesarios. Usa emojis que encajen.
+ESTILO:
+- Sin negritas en los títulos.
+- Mensajes mucho más cortos y fáciles de leer que antes.
+- Directo al grano, estilo místico-moderno.
 `;
 
       const response = await fetch(
