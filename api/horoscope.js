@@ -429,7 +429,8 @@ Hola, ${person.name},
 
 Hoy, ${todayFormatted}
 
-Tu energia astral de hoy: [Genera un % aleatorio entre 15-100% basado en ${person.sun} y la fecha] + [Frase muy breve relacionada].
+Tu energia astral de hoy: [Genera un % aleatorio entre 15-100% basado en ${person.sun} y la fecha]
+[Frase muy breve relacionada con el %].
 
 ✨ [Frase potente de una línea]
 
