@@ -423,20 +423,21 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
 const prompt = `
 Genera un mensaje de energía diaria para ZODIX.
 
-ESTRUCTURA OBLIGATORIA:
-1. Saludo: Hola ${person.name},
-2. (Línea en blanco)
-3. Fecha: Hoy, ${todayFormatted}
-4. (Línea en blanco)
-5. Energía: Tu energia astral de hoy: [Genera un % aleatorio entre 15-100% basado en ${person.sun} y la fecha] + [Frase muy breve relacionada].
-6. (Línea en blanco)
-7. ✨ [Frase potente de una línea]
-8. (Línea en blanco)
-9. 🔥 [Acción concreta y corta]
-10. (Línea en blanco)
-11. 💫 [Frase final inspiradora]
-12. (Línea en blanco)
-13. [Cierre tipo: "¡Que tengas un día lleno de energía y propósito!" o "¡Que tengas un día lleno de equilibrio y poder!"]
+ESTRUCTURA EXACTA:
+
+Hola, ${person.name},
+
+Hoy, ${todayFormatted}
+
+Tu energia astral de hoy: [Genera un % aleatorio entre 15-100% basado en ${person.sun} y la fecha] + [Frase muy breve relacionada].
+
+✨ [Frase potente de una línea]
+
+🔥 [Acción concreta y corta]
+
+💫 [Frase final inspiradora]
+
+[Cierre tipo: "¡Que tengas un día lleno de energía y propósito!" o "¡Que tengas un día lleno de equilibrio y poder!"]
 
 DATOS DEL USUARIO:
 Sol: ${person.sun}
