@@ -421,55 +421,22 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
       }
 
 const prompt = `
-Genera un mensaje diario de energía astral personalizado.
+Genera un mensaje diario de energía emocional.
 
-FORMATO OBLIGATORIO:
+Hola ${person.name},
 
-⚡ ENERGÍA ASTRAL: [número entre 20% y 100%]
+Hoy, ${todayFormatted}
 
-📊 NIVEL DEL DÍA:
-Genera una frase corta según el porcentaje:
+✨ Frase potente.
 
-- 80% a 100% → Día muy favorable y potente
-- 60% a 79% → Día positivo y fluido
-- 40% a 59% → Día neutro o equilibrado
-- 20% a 39% → Día sensible o de calma
+🔥 Acción concreta.
 
-Debe ser una frase corta (máximo 8 palabras).
+💫 Frase final.
 
-✨ FRASE DEL DÍA:
-Una frase clara y potente (máximo 14 palabras).
-
-📩 MENSAJES CLAVE:
-- Mensaje corto y directo (máximo 9 palabras)
-- Mensaje corto y directo (máximo 9 palabras)
-- Mensaje corto y directo (máximo 9 palabras)
-
-🔮 CONSEJO GENERAL:
-Un pequeño párrafo motivador de máximo 2 frases.
-Debe sentirse personal y emocional.
-
-REGLAS IMPORTANTES:
-
-- El porcentaje debe estar entre 20% y 100%.
-- Evitar repetir valores extremos como 20% o 100%.
-- Variar ligeramente el porcentaje cada día.
-- El porcentaje debe sentirse coherente con el mensaje.
-- No usar textos largos.
-- No repetir frases genéricas.
-- Lenguaje claro, emocional y moderno.
-
-DATOS PERSONALES:
-
-Nombre: ${person.name}
-
-Fecha: ${todayFormatted}
-
+DATOS:
 Sol: ${person.sun}
 Luna: ${person.moon}
 Ascendente: ${person.rising}
-
-El mensaje debe sentirse místico, emocional y personalizado.
 `;
 
       const response = await fetch(
