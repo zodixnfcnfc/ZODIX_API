@@ -435,8 +435,8 @@ ESTRUCTURA OBLIGATORIA:
 9. 🔥 [Acción concreta y corta]
 10. (Línea en blanco)
 11. 💫 [Frase final inspiradora]
-
-[Cierre tipo: "¡Que tengas un día lleno de energía y propósito!" o "¡Que tengas un día lleno de equilibrio y poder!"]
+12. (Línea en blanco)
+13. [Cierre tipo: "¡Que tengas un día lleno de energía y propósito!" o "¡Que tengas un día lleno de equilibrio y poder!"]
 
 DATOS DEL USUARIO:
 Sol: ${person.sun}
