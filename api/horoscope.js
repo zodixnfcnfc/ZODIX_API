@@ -421,22 +421,23 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
       }
 
 const prompt = `
-Genera un mensaje diario de energía emocional.
+Genera un mensaje de "Energía Diaria" para ${person.name}. 
+Fecha: ${todayFormatted}. 
+Signos: Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
 
-Hola ${person.name},
+### INSTRUCCIONES DE FORMATO:
+1. Comienza con: "Hola ${person.name},"
+2. Continúa con: "Hoy, ${todayFormatted}"
+3. **Tu energía astral:** Genera un porcentaje aleatorio entre 15% y 100%. (Varía el número según la combinación de sus signos y la fecha de hoy para que no sea siempre el mismo).
+4. Añade una frase ultra-corta (máximo 10 palabras) que justifique ese % de energía.
 
-Hoy, ${todayFormatted}
+### CONTENIDO (Mensajes cortos y directos):
+- ✨ **Enfoque:** Una frase potente de una sola línea sobre la vibración del día.
+- 🔥 **Acción:** Un consejo práctico y directo (máximo 15 palabras).
+- 💫 **Cierre:** Una frase inspiradora de cierre de 5 a 8 palabras.
 
-✨ Frase potente.
-
-🔥 Acción concreta.
-
-💫 Frase final.
-
-DATOS:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
+### TONO:
+Cercano, místico pero moderno (estilo ZODIX), sin rellenos innecesarios. Usa emojis que encajen.
 `;
 
       const response = await fetch(
