@@ -421,7 +421,6 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
       }
 
 const prompt = `
-const prompt = `
 Genera un mensaje de energía diaria para ZODIX.
 
 ESTRUCTURA OBLIGATORIA:
