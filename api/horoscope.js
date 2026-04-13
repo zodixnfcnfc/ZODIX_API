@@ -427,12 +427,12 @@ ESTRUCTURA OBLIGATORIA:
 1. Saludo: Hola ${person.name},
 2. Fecha: Hoy, ${todayFormatted}
 3. Energía: Tu energia astral de hoy: [Genera un % aleatorio entre 15-100% basado en ${person.sun} y la fecha] + [Frase muy breve relacionada].
-
-4. ✨ [Frase potente de una línea]
-
-5. 🔥 [Acción concreta y corta]
-
-6. 💫 [Frase final inspiradora]
+4. (Línea en blanco)
+5. ✨ [Frase potente de una línea]
+6. (Línea en blanco)
+7. 🔥 [Acción concreta y corta]
+8. (Línea en blanco)
+9. 💫 [Frase final inspiradora]
 
 DATOS DEL USUARIO:
 Sol: ${person.sun}
