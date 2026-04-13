@@ -425,13 +425,11 @@ Genera un mensaje de energía diaria para ZODIX.
 
 ESTRUCTURA OBLIGATORIA:
 1. Saludo: Hola ${person.name},
-2. (Línea en blanco)
-3. Fecha: Hoy, ${todayFormatted}
-4. Energía: Tu energia astral de hoy: [Genera un % aleatorio entre 15-100% basado en ${person.sun} y la fecha] + [Frase muy breve relacionada].
-5. (Línea en blanco)
-6. ✨ [Frase potente de una línea]
-7. 🔥 [Acción concreta y corta]
-8. 💫 [Frase final inspiradora]
+2. Fecha: Hoy, ${todayFormatted}
+3. Energía: Tu energia astral de hoy: [Genera un % aleatorio entre 15-100% basado en ${person.sun} y la fecha] + [Frase muy breve relacionada].
+4. ✨ [Frase potente de una línea]
+5. 🔥 [Acción concreta y corta]
+6. 💫 [Frase final inspiradora]
 
 DATOS DEL USUARIO:
 Sol: ${person.sun}
@@ -439,7 +437,6 @@ Luna: ${person.moon}
 Ascendente: ${person.rising}
 
 ESTILO:
-- Sin negritas en los títulos.
 - Mensajes mucho más cortos y fáciles de leer que antes.
 - Directo al grano, estilo místico-moderno.
 `;
