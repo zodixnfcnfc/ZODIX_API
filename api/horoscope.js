@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     // 1. AMPLIAMOS EL RANGO A "U" para leer las nuevas columnas
     const sheetData = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "A:V" 
+      range: "A:W" 
     });
 
     const rows = sheetData.data.values;
@@ -59,7 +59,8 @@ person = {
           pair_date: safeRow[18] || "",
           code_message: safeRow[19] || "",
           code_day: safeRow[20] || "",
-          message_daily_long: safeRow[21] || "" 
+          message_daily_long: safeRow[21] || "",
+          message_daily_long_day: safeRow[22] || ""
         };
         break;
       }
@@ -342,15 +343,32 @@ REGLAS CRÍTICAS:
 }
   
 /* 🌌 ENERGÍA LARGA (HORÓSCOPO COMPLETO) - CON GUARDADO EN COLUMNA V */
-    if (type === "energy_long") {
-      
-      // 1. Verificamos si ya existe el mensaje largo guardado para HOY
-      // Usamos la fecha de la columna N (person.message_date) que ya tienes
-      if (person.message_date === today && person.energy_long_message) {
-        return res.status(200).json({ 
-          choices: [{ message: { content: person.energy_long_message } }] 
-        });
-      }
+if (type === "energy_long") {
+  
+  // 1. Verificamos si ya existe el mensaje largo para HOY usando la nueva columna W
+  if (person.message_daily_long_day === today && person.message_daily_long) {
+    return res.status(200).json({ 
+      choices: [{ message: { content: person.message_daily_long } }] 
+    });
+  }
+
+  // ... aquí va tu código de fetch a OpenAI (se mantiene igual) ...
+  const responseLong = await fetch("https://api.openai.com/v1/chat/completions", { /* ... */ });
+  const dataLong = await responseLong.json();
+  const messageLong = dataLong.choices[0].message.content;
+
+  // 2. GUARDAR: Ahora guardamos en V (mensaje) y en W (fecha de hoy)
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: sheetId,
+    range: `V${rowIndex}:W${rowIndex}`, // <-- CAMBIADO A V:W
+    valueInputOption: "RAW",
+    requestBody: {
+      values: [[messageLong, today]] // <-- GUARDAMOS AMBOS VALORES
+    }
+  });
+
+  return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
+}
 
       const promptLong = `
 Genera un horóscopo profundo y extendido.
