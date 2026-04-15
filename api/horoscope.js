@@ -138,21 +138,28 @@ const response = await fetch(
   }
 );
 
-      const data = await response.json();
-      const codeDataText = data.choices[0].message.content;
+const data = await response.json();
+      let codeDataText = data.choices[0].message.content;
+
+      // 1. LIMPIEZA: Quitamos las comillas triple (```json) que pone OpenAI
+      codeDataText = codeDataText.replace(/```json/g, "").replace(/```/g, "").trim();
       
-      // Guardar el JSON como string en Columna T y la fecha en U
+      // 2. PARSEO: Convertimos el texto en un objeto real de JS
+      const finalJson = JSON.parse(codeDataText);
+
+      // 3. GUARDAR: Guardamos en Sheets el texto ya limpio
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
         range: `T${rowIndex}:U${rowIndex}`,
         valueInputOption: "RAW",
         requestBody: {
-          values: [[codeDataText, today]]
+          values: [[JSON.stringify(finalJson), today]]
         }
       });
 
-      return res.status(200).json(JSON.parse(codeDataText));
-    }
+      // 4. RESPONDER: Enviamos el JSON limpio a Shopify
+      return res.status(200).json(finalJson);
+     }
 
     /* 🔮 READPAIR — SOLO LECTURA */
     if (type === "readpair") {
