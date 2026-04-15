@@ -359,19 +359,19 @@ INSTRUCCIÓN DE FORMATO: No utilices asteriscos (**), ni almohadillas (#), ni ni
 Hola ${person.name},
 Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
 
-✨ FRASE POTENTE DE HOY:
+✨ FRASE POTENTE DE HOY
 (Escribe una frase inspiradora basada en Sol: ${person.sun} y Luna: ${person.moon})
 
-❤️ EN EL AMOR:
+❤️ EN EL AMOR
 (Desarrollo detallado de 3-4 líneas sobre sentimientos y conexiones)
 
-💼 EN EL TRABAJO Y DINERO:
+💼 EN EL TRABAJO Y DINERO
 (Desarrollo detallado de 3-4 líneas sobre proyectos y abundancia)
 
-🌿 EN TU BIENESTAR:
+🌿 EN TU BIENESTAR
 (Desarrollo detallado de 3-4 líneas sobre salud y energía mental)
 
-🔥 ACCIÓN CONCRETA PARA EL ÉXITO:
+🔥 ACCIÓN CONCRETA PARA EL ÉXITO
 (Un consejo práctico y místico para ejecutar hoy)
 
 💫 MENSAJE FINAL DEL COSMOS:
