@@ -17,12 +17,12 @@ export default async function handler(req, res) {
       ["https://www.googleapis.com/auth/spreadsheets"]
     );
 
-    const sheets = google.sheets({ version: "v4", auth });
+    const sheets = google.sheets({ version: "v4", auth })
 
     // 1. AMPLIAMOS EL RANGO A "U" para leer las nuevas columnas
     const sheetData = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "A:W" 
+      range: "A:AA" 
     });
 
     const rows = sheetData.data.values;
@@ -411,15 +411,38 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
   return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
 }
     
+/* 📜 HISTORIAL — RECUPERAR ÚLTIMOS 3 DÍAS */
+if (type === "history") {
+  // Obtenemos la fila y nos aseguramos de que llegue hasta la columna AA (índice 26)
+  const safeRow = rows[rowIndex - 1].concat(Array(27).fill(""));
+
+  return res.status(200).json({
+    hoy: {
+      mensaje: safeRow[12] || "",
+      fecha: safeRow[13] || ""
+    },
+    ayer: {
+      mensaje: safeRow[23] || "",
+      fecha: safeRow[24] || ""
+    },
+    antier: {
+      mensaje: safeRow[25] || "",
+      fecha: safeRow[26] || ""
+    }
+  });
+}
+
+    
 /* ⚡ ENERGÍA (Por defecto) */
 if (type !== "affinity") {
+  // 1. Si ya existe el mensaje de hoy, lo devolvemos y no hacemos nada más
   if (person.message_date === today && person.message_daily) {
     return res.status(200).json({
       choices: [{ message: { content: person.message_daily } }]
     });
   }
 
-  // CALCULO ALEATORIO REAL DESDE EL CÓDIGO (Para evitar el sesgo del 70%)
+  // 2. Cálculo de porcentaje y Prompt
   const randomPercentage = Math.floor(Math.random() * (100 - 19 + 1)) + 19;
   
   const prompt = `
@@ -475,12 +498,49 @@ Tu energía astral de hoy: ${randomPercentage}% - [Frase de 4 palabras]
   const data = await response.json();
   const message = data.choices[0].message.content;
 
+  // --- LÓGICA DE HISTORIAL (DESPLAZAMIENTO) ---
+  
+  // Extraemos los valores actuales de la fila (usamos rows[rowIndex-1] porque rowIndex es base 1)
+  // Necesitamos blindar la fila por si las columnas nuevas están vacías
+  const fullRow = rows[rowIndex - 1].concat(Array(27).fill(""));
+
+  // M y N son Hoy (indices 12 y 13)
+  // X e Y son Ayer (indices 23 y 24)
+  // Z y AA son Antes de ayer (indices 25 y 26)
+  
+  const currentTodayMsg = fullRow[12] || "";
+  const currentTodayDate = fullRow[13] || "";
+  const currentYesterdayMsg = fullRow[23] || "";
+  const currentYesterdayDate = fullRow[24] || "";
+
+  // Preparamos la actualización
+  let updateRange;
+  let updateValues;
+
+  // Si la fecha guardada en "Hoy" es distinta a la de hoy, desplazamos hacia atrás
+  if (currentTodayDate !== today) {
+    updateRange = `M${rowIndex}:AA${rowIndex}`;
+    updateValues = [[
+      message,              // Nuevo mensaje hoy (M)
+      today,                // Nueva fecha hoy (N)
+      ...Array(9).fill(""), // Saltamos columnas O hasta W (9 columnas)
+      currentTodayMsg,      // Lo que era hoy pasa a Ayer (X)
+      currentTodayDate,     // Lo que era hoy pasa a Ayer (Y)
+      currentYesterdayMsg,  // Lo que era ayer pasa a Antier (Z)
+      currentYesterdayDate  // Lo que era ayer pasa a Antier (AA)
+    ]];
+  } else {
+    // Si por algún motivo se regenera el mismo día, solo actualizamos hoy
+    updateRange = `M${rowIndex}:N${rowIndex}`;
+    updateValues = [[message, today]];
+  }
+
   // GUARDAR EN GOOGLE SHEETS
   await sheets.spreadsheets.values.update({
     spreadsheetId: sheetId,
-    range: `M${rowIndex}:N${rowIndex}`,
+    range: updateRange,
     valueInputOption: "RAW",
-    requestBody: { values: [[message, today]] }
+    requestBody: { values: updateValues }
   });
 
   return res.status(200).json({ choices: [{ message: { content: message } }] });
