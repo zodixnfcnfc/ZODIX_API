@@ -60,7 +60,7 @@ person = {
           code_message: safeRow[19] || "",
           code_day: safeRow[20] || "",
           message_daily_long: safeRow[21] || "",
-          message_daily_long_day: safeRow[22] || ""
+          message_daily_long_day: safeRow[22] || "",
         };
         break;
       }
