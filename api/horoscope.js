@@ -99,25 +99,26 @@ Genera el "Código del Día" místico para ${person.name} (Sol: ${person.sun}, A
 FECHA: ${todayFormatted}
 SEMILLA DE ALEATORIEDAD: ${Math.random()} 
 
-INSTRUCCIONES OBLIGATORIAS DE RANGO:
-1. "numero": Elige un número entero ÚNICO entre 1 y 22. Prohibido usar siempre el 12.
-2. "momento": Elige un rango de 2 horas estrictamente entre las 08:00 y las 23:00 (ej: "09:00 - 11:00", "19:30 - 21:30").
-3. "suerte": Un porcentaje entre 30% y 99%.
+INSTRUCCIONES DE DISEÑO Y LONGITUD (ESTRICTO):
+1. "mision": Debe ser una tarea rápida y accionable. MÁXIMO 6-10 palabras. (Ej: "Escribe tres ideas nuevas hoy" o "Termina una tarea pendiente").
+2. "alerta": Debe ser una advertencia corta y directa. MÁXIMO 5-7 palabras. (Ej: "Evita decisiones impulsivas" o "Cuidado con gastos innecesarios").
+3. "numero": Número entero único entre 1 y 22.
+4. "suerte": Un porcentaje entre 30% y 99%.
 
 RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
 {
   "numero": "número entre 1 y 22",
-  "numero_desc": "frase mística",
+  "numero_desc": "frase mística corta",
   "color": "color",
   "color_desc": "energía del color",
   "momento": "rango entre 08:00 y 23:00",
-  "momento_desc": "explicación del momento",
+  "momento_desc": "explicación breve",
   "elemento": "Agua, Fuego, Tierra o Aire",
-  "elemento_desc": "frase del elemento",
+  "elemento_desc": "frase corta del elemento",
   "suerte": "X%",
-  "mision": "tarea de hoy",
-  "alerta": "qué evitar",
-  "palabra": "enfoque"
+  "mision": "tarea rápida de max 10 palabras",
+  "alerta": "evitar algo en max 7 palabras",
+  "palabra": "una sola palabra"
 }
 `;
 
