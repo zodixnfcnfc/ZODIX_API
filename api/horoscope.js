@@ -420,8 +420,8 @@ if (type !== "affinity") {
   }
 
   // CALCULO ALEATORIO REAL DESDE EL CÓDIGO (Para evitar el sesgo del 70%)
-  const randomPercentage = Math.floor(Math.random() * 100) + 1;
-
+  const randomPercentage = Math.floor(Math.random() * (100 - 19 + 1)) + 19;
+  
   const prompt = `
 Eres un guía astrológico moderno para ZODIX. 
 DATOS: ${person.name}, Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
