@@ -354,6 +354,8 @@ if (type === "energy_long") {
   // 2. Si no existe, usamos tu prompt detallado
   const promptLong = `
 Genera un horóscopo profundo y extendido.
+INSTRUCCIÓN DE FORMATO: No utilices asteriscos (**), ni almohadillas (#), ni ningún tipo de formato Markdown. Escribe los títulos en mayúsculas limpias.
+
 Hola ${person.name},
 Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
 
