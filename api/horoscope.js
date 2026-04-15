@@ -420,22 +420,28 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
       }
 
 const prompt = `
-Eres un guía astrológico moderno y minimalista para ZODIX. Genera 3 píldoras de sabiduría diaria y una conexión local para:
-NOMBRE: ${person.name}
-ORIGEN: ${person.birth_place} | HORA: ${person.birth_hour}
-PERFIL: Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
+Eres un guía astrológico moderno y minimalista para ZODIX. 
+DATOS DEL USUARIO:
+- NOMBRE: ${person.name}
+- ORIGEN: ${person.birth_place} | HORA: ${person.birth_hour}
+- PERFIL: Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
 
-INSTRUCCIONES DE ESTILO:
-- Frases cortas, poéticas y potentes. Sin relleno.
-- Evita sonar como un libro de texto; suena como un mentor que te envía un mensaje de WhatsApp.
-- Mezcla los datos (${person.sun}, ${person.moon}, ${person.rising}) de forma orgánica dentro de las frases.
+INSTRUCCIONES DE LÓGICA Y ESTILO:
+1. Genera un porcentaje de "Energía Astral" del 1 al 100.
+2. La [Frase de 4 palabras] DEBE estar alineada con ese porcentaje:
+   - 1-30%: Tono de pausa, autocuidado, silencio.
+   - 31-60%: Tono de equilibrio, proceso, espera activa.
+   - 61-85%: Tono de impulso, brillo, avance.
+   - 86-100%: Tono de conquista, poder total, expansión.
+3. Frases cortas y potentes. Sin relleno. Estilo WhatsApp.
+4. Mezcla los datos (${person.sun}, ${person.moon}, ${person.rising}) de forma orgánica.
 
-ESTRUCTURA EXACTA:
+ESTRUCTURA EXACTA (RESPETA LOS SALTOS DE LÍNEA):
 
 Hola, ${person.name},
 Hoy, ${todayFormatted}
 
-Tu energía astral de hoy: [Porcentaje]% - [Frase de 4 palabras]
+Tu energía astral de hoy: [Porcentaje]% - [Frase de 4 palabras que rime con la intensidad del %]
 
 ✨ [Una verdad corta que combine la esencia de su Sol en ${person.sun} con su Luna en ${person.moon}].
 
@@ -445,22 +451,31 @@ Tu energía astral de hoy: [Porcentaje]% - [Frase de 4 palabras]
 
 💫 [Cierre de 3 palabras].
 `;
-      
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
 
+const response = await fetch(
+  "https://api.openai.com/v1/chat/completions",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini", // Nota: Asegúrate de usar un modelo válido como gpt-4o-mini o gpt-3.5-turbo
+      messages: [
+        { 
+          role: "system", 
+          content: "Eres un mentor astrológico experto en brevedad y simbolismo. Tu misión es conectar el porcentaje de energía con el tono del mensaje." 
+        },
+        { 
+          role: "user", 
+          content: prompt 
+        }
+      ],
+      temperature: 0.85 // Temperatura alta para que las frases de 4 palabras varíen cada día
+    })
+  }
+);
       const data = await response.json();
       const message = data.choices[0].message.content;
 
