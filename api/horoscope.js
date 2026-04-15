@@ -420,34 +420,30 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
       }
 
 const prompt = `
-Eres un astrólogo experto de ZODIX, conocido por lecturas vibrantes, precisas y magnéticas. 
-Genera un mensaje de energía diaria altamente personalizado para:
-
+Eres un guía astrológico moderno y minimalista para ZODIX. Genera 3 píldoras de sabiduría diaria y una conexión local para:
 NOMBRE: ${person.name}
-DATOS DE ORIGEN: Nacido el ${person.birth_date} a las ${person.birth_hour} en ${person.birth_place}.
-PERFIL ASTRAL: Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
-FECHA DE HOY: ${todayFormatted}
+ORIGEN: ${person.birth_place} | HORA: ${person.birth_hour}
+PERFIL: Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
 
 INSTRUCCIONES DE ESTILO:
-- Tono: "Místico-Empoderador". Evita clichés genéricos; usa un lenguaje que denote autoridad astrológica.
-- Conexión: Cruza SIEMPRE los signos entre sí (ej: "Tu Sol en X suaviza la intensidad de tu Luna en Y").
-- Brevedad: Frases cortas con mucho impacto (punchy).
+- Frases cortas, poéticas y potentes. Sin relleno.
+- Evita sonar como un libro de texto; suena como un mentor que te envía un mensaje de WhatsApp.
+- Mezcla los datos (${person.sun}, ${person.moon}, ${person.rising}) de forma orgánica dentro de las frases.
 
-ESTRUCTURA OBLIGATORIA (RESPETA EMOJIS Y FORMATO):
+ESTRUCTURA EXACTA:
 
 Hola, ${person.name},
-
 Hoy, ${todayFormatted}
 
-Tu energía astral de hoy: [Genera un % entre 65-99% basado en el tránsito de ${person.sun} hoy] - [Frase corta de 4-6 palabras de autoridad].
+Tu energía astral de hoy: [Porcentaje]% - [Frase de 4 palabras]
 
-✨ [Frase de una línea que fusione su Sol en ${person.sun} con su Ascendente en ${person.rising}].
+✨ [Una verdad corta que combine la esencia de su Sol en ${person.sun} con su Luna en ${person.moon}].
 
-🔥 [Acción disciplinada y potente basada en su Luna en ${person.moon}].
+🔥 [Acción concreta de menos de 20 palabras que resuene con su Ascendente en ${person.rising}].
 
-📍 [Frase exclusiva sobre su origen: Conecta la energía de ${person.birth_place} con su esencia o la hora de nacimiento ${person.birth_hour}h].
+📍 [Conexión mágica: Una frase breve que vincule su origen en ${person.birth_place} o su hora (${person.birth_hour}) con su energía actual].
 
-¡Avanza con determinación imparable!
+💫 [Cierre de 3 palabras].
 `;
       
       const response = await fetch(
