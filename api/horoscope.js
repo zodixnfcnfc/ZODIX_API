@@ -41,7 +41,7 @@ export default async function handler(req, res) {
         rowIndex = i + 1;
 
         // Blindaje para 21 columnas (hasta la U)
-        const safeRow = rows[i].concat(Array(21).fill(""));
+        const safeRow = rows[i].concat(Array(23).fill(""));
 
 person = {
           name: safeRow[4] || "",
@@ -344,27 +344,35 @@ REGLAS CRÍTICAS:
   
 /* 🌌 ENERGÍA LARGA (HORÓSCOPO COMPLETO) - CON GUARDADO EN COLUMNA V */
 if (type === "energy_long") {
-  
-  // 1. Verificamos si ya existe el mensaje largo para HOY usando la nueva columna W
+  // 1. Si el día en W es hoy, no generamos nada nuevo
   if (person.message_daily_long_day === today && person.message_daily_long) {
     return res.status(200).json({ 
       choices: [{ message: { content: person.message_daily_long } }] 
     });
   }
 
-  // ... aquí va tu código de fetch a OpenAI (se mantiene igual) ...
-  const responseLong = await fetch("https://api.openai.com/v1/chat/completions", { /* ... */ });
+  const promptLong = `Genera horóscopo para ${person.name}...`; // Tu prompt aquí
+
+  const responseLong = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.OPENAI_API_KEY}` },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      max_tokens: 800,
+      temperature: 0.8,
+      messages: [{ role: "user", content: promptLong }]
+    })
+  });
+
   const dataLong = await responseLong.json();
   const messageLong = dataLong.choices[0].message.content;
 
-  // 2. GUARDAR: Ahora guardamos en V (mensaje) y en W (fecha de hoy)
+  // 2. Guardamos el mensaje en V y el día en W
   await sheets.spreadsheets.values.update({
     spreadsheetId: sheetId,
-    range: `V${rowIndex}:W${rowIndex}`, // <-- CAMBIADO A V:W
+    range: `V${rowIndex}:W${rowIndex}`,
     valueInputOption: "RAW",
-    requestBody: {
-      values: [[messageLong, today]] // <-- GUARDAMOS AMBOS VALORES
-    }
+    requestBody: { values: [[messageLong, today]] }
   });
 
   return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
