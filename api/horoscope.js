@@ -420,35 +420,36 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
       }
 
 const prompt = `
-Eres un astrólogo experto en ZODIX. Genera un mensaje de energía diaria altamente personalizado para:
+Eres un astrólogo experto de ZODIX, conocido por lecturas vibrantes, precisas y magnéticas. 
+Genera un mensaje de energía diaria altamente personalizado para:
+
 NOMBRE: ${person.name}
 DATOS DE ORIGEN: Nacido el ${person.birth_date} a las ${person.birth_hour} en ${person.birth_place}.
 PERFIL ASTRAL: Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
-
 FECHA DE HOY: ${todayFormatted}
 
 INSTRUCCIONES DE ESTILO:
-- Usa un tono místico-moderno, directo y empoderador.
-- El mensaje DEBE sentirse personalizado: menciona algo sutil sobre cómo su combinación de ${person.sun} y ${person.rising} influye en su energía de hoy.
-- Mantén las frases cortas y potentes.
+- Tono: "Místico-Empoderador". Evita clichés genéricos; usa un lenguaje que denote autoridad astrológica.
+- Conexión: Cruza SIEMPRE los signos entre sí (ej: "Tu Sol en X suaviza la intensidad de tu Luna en Y").
+- Brevedad: Frases cortas con mucho impacto (punchy).
 
-ESTRUCTURA EXACTA (RESPETA LOS EMOJIS):
+ESTRUCTURA OBLIGATORIA (RESPETA EMOJIS Y FORMATO):
 
 Hola, ${person.name},
 
 Hoy, ${todayFormatted}
 
-Tu energía astral de hoy: [Genera un % aleatorio entre 15-100% basado en la vibración de ${person.sun} hoy] - [Frase de 4-5 palabras que conecte el % con su personalidad].
+Tu energía astral de hoy: [Genera un % entre 65-99% basado en el tránsito de ${person.sun} hoy] - [Frase corta de 4-6 palabras de autoridad].
 
-✨ [Frase potente de una línea que combine su Sol y su Luna]
+✨ [Frase de una línea que fusione su Sol en ${person.sun} con su Ascendente en ${person.rising}].
 
-🔥 [Acción concreta y corta basada en su Ascendente: ${person.rising}]
+🔥 [Acción disciplinada y potente basada en su Luna en ${person.moon}].
 
-💫 [Frase final inspiradora que mencione un rasgo de su lugar de nacimiento o esencia]
+📍 [Frase exclusiva sobre su origen: Conecta la energía de ${person.birth_place} con su esencia o la hora de nacimiento ${person.birth_hour}h].
 
-[Cierre breve de poder]
+¡Avanza con determinación imparable!
 `;
-
+      
       const response = await fetch(
         "https://api.openai.com/v1/chat/completions",
         {
