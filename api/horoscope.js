@@ -420,32 +420,33 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
       }
 
 const prompt = `
-Genera un mensaje de energía diaria para ZODIX.
+Eres un astrólogo experto en ZODIX. Genera un mensaje de energía diaria altamente personalizado para:
+NOMBRE: ${person.name}
+DATOS DE ORIGEN: Nacido el ${person.birth_date} a las ${person.birth_hour} en ${person.birth_place}.
+PERFIL ASTRAL: Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
 
-ESTRUCTURA EXACTA:
+FECHA DE HOY: ${todayFormatted}
+
+INSTRUCCIONES DE ESTILO:
+- Usa un tono místico-moderno, directo y empoderador.
+- El mensaje DEBE sentirse personalizado: menciona algo sutil sobre cómo su combinación de ${person.sun} y ${person.rising} influye en su energía de hoy.
+- Mantén las frases cortas y potentes.
+
+ESTRUCTURA EXACTA (RESPETA LOS EMOJIS):
 
 Hola, ${person.name},
 
 Hoy, ${todayFormatted}
 
-Tu energia astral de hoy: [Genera un % aleatorio entre 15-100% basado en ${person.sun} y la fecha] - [Frase muy breve relacionada con el %].
+Tu energía astral de hoy: [Genera un % aleatorio entre 15-100% basado en la vibración de ${person.sun} hoy] - [Frase de 4-5 palabras que conecte el % con su personalidad].
 
-✨ [Frase potente de una línea]
+✨ [Frase potente de una línea que combine su Sol y su Luna]
 
-🔥 [Acción concreta y corta]
+🔥 [Acción concreta y corta basada en su Ascendente: ${person.rising}]
 
-💫 [Frase final inspiradora]
+💫 [Frase final inspiradora que mencione un rasgo de su lugar de nacimiento o esencia]
 
-[Cierre tipo: "¡Que tengas un día lleno de energía y propósito!" o "¡Que tengas un día lleno de equilibrio y poder!"]
-
-DATOS DEL USUARIO:
-Sol: ${person.sun}
-Luna: ${person.moon}
-Ascendente: ${person.rising}
-
-ESTILO:
-- Mensajes mucho más cortos y fáciles de leer que antes.
-- Directo al grano, estilo místico-moderno.
+[Cierre breve de poder]
 `;
 
       const response = await fetch(
