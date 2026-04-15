@@ -342,47 +342,19 @@ REGLAS CRÍTICAS:
   return res.status(200).json({ choices: [{ message: { content: message } }] });
 }
   
-/* 🌌 ENERGÍA LARGA (HORÓSCOPO COMPLETO) - CON GUARDADO EN COLUMNA V */
+/* 🌌 ENERGÍA LARGA (HORÓSCOPO COMPLETO) */
 if (type === "energy_long") {
-  // 1. Si el día en W es hoy, no generamos nada nuevo
+  // 1. Si el día en W es hoy, leemos de la hoja y no gastamos créditos
   if (person.message_daily_long_day === today && person.message_daily_long) {
     return res.status(200).json({ 
       choices: [{ message: { content: person.message_daily_long } }] 
     });
   }
 
-  const promptLong = `Genera horóscopo para ${person.name}...`; // Tu prompt aquí
-
-  const responseLong = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.OPENAI_API_KEY}` },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      max_tokens: 800,
-      temperature: 0.8,
-      messages: [{ role: "user", content: promptLong }]
-    })
-  });
-
-  const dataLong = await responseLong.json();
-  const messageLong = dataLong.choices[0].message.content;
-
-  // 2. Guardamos el mensaje en V y el día en W
-  await sheets.spreadsheets.values.update({
-    spreadsheetId: sheetId,
-    range: `V${rowIndex}:W${rowIndex}`,
-    valueInputOption: "RAW",
-    requestBody: { values: [[messageLong, today]] }
-  });
-
-  return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
-}
-
-      const promptLong = `
+  // 2. Si no existe, usamos tu prompt detallado
+  const promptLong = `
 Genera un horóscopo profundo y extendido.
-
 Hola ${person.name},
-
 Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
 
 ✨ FRASE POTENTE DE HOY:
@@ -404,40 +376,39 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
 (Una frase de cierre que resuene con su Ascendente: ${person.rising})
 `;
 
-      const responseLong = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            max_tokens: 800, // Aumentado para que el texto detallado no se corte
-            temperature: 0.8,
-            messages: [{ role: "user", content: promptLong }]
-          })
-        }
-      );
-
-      const dataLong = await responseLong.json();
-      const messageLong = dataLong.choices[0].message.content;
-
-      // 2. GUARDAR en la Columna V (que es el índice 21)
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `V${rowIndex}`, 
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[messageLong]]
-        }
-      });
-
-      // 3. Devolver la respuesta recién generada
-      return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
+  const responseLong = await fetch(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        max_tokens: 800,
+        temperature: 0.8,
+        messages: [{ role: "user", content: promptLong }]
+      })
     }
-  
+  );
+
+  const dataLong = await responseLong.json();
+  const messageLong = dataLong.choices[0].message.content;
+
+  // 3. GUARDAMOS EL RESULTADO: Mensaje en V y Fecha en W
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: sheetId,
+    range: `V${rowIndex}:W${rowIndex}`, 
+    valueInputOption: "RAW",
+    requestBody: {
+      values: [[messageLong, today]]
+    }
+  });
+
+  return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
+}
+    
     /* ⚡ ENERGÍA (Por defecto) */
     if (type !== "affinity") {
       if (person.message_date === today && person.message_daily) {
