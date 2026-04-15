@@ -420,7 +420,7 @@ if (type !== "affinity") {
   }
 
   // CALCULO ALEATORIO REAL DESDE EL CÓDIGO (Para evitar el sesgo del 70%)
-  const randomPercentage = Math.floor(Math.random() * (100 - 19 + 1)) + 19;
+  const randomPercentage = Math.floor(Math.random() * (100 - 35 + 1)) + 35;
   
   const prompt = `
 Eres un guía astrológico moderno para ZODIX. 
