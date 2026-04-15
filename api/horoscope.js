@@ -419,30 +419,31 @@ if (type !== "affinity") {
     });
   }
 
-  // CALCULO ALEATORIO REAL DESDE EL CÓDIGO
+  // CALCULO ALEATORIO REAL DESDE EL CÓDIGO (Para evitar el sesgo del 70%)
   const randomPercentage = Math.floor(Math.random() * 100) + 1;
 
   const prompt = `
 Eres un guía astrológico moderno para ZODIX. 
 DATOS: ${person.name}, Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
 
-INSTRUCCIÓN CRÍTICA:
-Hoy el usuario tiene exactamente un ${randomPercentage}% de energía astral.
-Tu frase de 4 palabras DEBE reflejar obligatoriamente este nivel:
-- Si es 1-30%: Frase de introspección/pausa (ej: "Momento de guardar silencio").
-- Si es 31-60%: Frase de equilibrio/espera (ej: "Calma y paso firme").
-- Si es 61-85%: Frase de acción/brillo (ej: "Tu luz hoy brilla").
-- Si es 86-100%: Frase de éxito total (ej: "Cosecha tus grandes triunfos").
+INSTRUCCIÓN DE DISEÑO (CRÍTICA):
+- Debes dejar una LÍNEA EN BLANCO (doble salto de línea) entre cada sección.
+- El porcentaje de hoy es exactamente: ${randomPercentage}%.
+- La frase de 4 palabras debe ser coherente con ese ${randomPercentage}%.
 
-ESTRUCTURA:
+ESTRUCTURA EXACTA CON ESPACIOS:
+
 Hola, ${person.name},
 Hoy, ${todayFormatted}
 
-Tu energía astral de hoy: ${randomPercentage}% - [Frase de 4 palabras según el %]
+Tu energía astral de hoy: ${randomPercentage}% - [Frase de 4 palabras]
 
-✨ [Verdad corta Sol/Luna].
-🔥 [Acción Ascendente < 20 palabras].
-📍 [Conexión con ${person.birth_place} o ${person.birth_hour}].
+✨ [Una verdad corta que combine Sol en ${person.sun} con Luna en ${person.moon}].
+
+🔥 [Acción concreta de menos de 20 palabras para el Ascendente ${person.rising}].
+
+📍 [Conexión mágica con su origen ${person.birth_place} o su hora ${person.birth_hour}].
+
 💫 [Cierre de 3 palabras].
 `;
 
@@ -457,26 +458,33 @@ Tu energía astral de hoy: ${randomPercentage}% - [Frase de 4 palabras según el
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "Eres un astrólogo directo. No repitas el 70%, usa el porcentaje exacto que te doy." },
-          { role: "user", content: prompt }
+          { 
+            role: "system", 
+            content: "Eres un mentor astrológico que escribe de forma muy visual. SIEMPRE dejas una línea vacía entre párrafos. No usas negritas." 
+          },
+          { 
+            role: "user", 
+            content: prompt 
+          }
         ],
-        temperature: 1.0 // Máxima variabilidad
+        temperature: 1.0 
       })
     }
   );
 
-      const data = await response.json();
-      const message = data.choices[0].message.content;
+  const data = await response.json();
+  const message = data.choices[0].message.content;
 
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `M${rowIndex}:N${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: { values: [[message, today]] }
-      });
+  // GUARDAR EN GOOGLE SHEETS
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: sheetId,
+    range: `M${rowIndex}:N${rowIndex}`,
+    valueInputOption: "RAW",
+    requestBody: { values: [[message, today]] }
+  });
 
-      return res.status(200).json({ choices: [{ message: { content: message } }] });
-    }
+  return res.status(200).json({ choices: [{ message: { content: message } }] });
+}
 
   } catch (error) {
     res.status(500).json({
