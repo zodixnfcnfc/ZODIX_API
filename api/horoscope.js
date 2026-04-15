@@ -94,22 +94,30 @@ person = {
         }
       }
 
-      const promptCode = `
-Genera el "Código del Día" místico para ${person.name} basado en su Sol: ${person.sun} y Ascendente: ${person.rising}.
+const promptCode = `
+Genera el "Código del Día" místico para ${person.name} (Sol: ${person.sun}, Asc: ${person.rising}).
 FECHA: ${todayFormatted}
+SEMILLA DE ALEATORIEDAD: ${Math.random()} 
 
-INSTRUCCIÓN CRÍTICA: Elige combinaciones de números, colores y momentos COMPLETAMENTE AL AZAR. No repitas patrones comunes.
+INSTRUCCIONES OBLIGATORIAS DE RANGO:
+1. "numero": Elige un número entero ÚNICO entre 1 y 22. Prohibido usar siempre el 12.
+2. "momento": Elige un rango de 2 horas estrictamente entre las 08:00 y las 23:00 (ej: "09:00 - 11:00", "19:30 - 21:30").
+3. "suerte": Un porcentaje entre 30% y 99%.
 
-RESPONDE ÚNICAMENTE EN FORMATO JSON PURO, sin textos extra, siguiendo esta estructura exacta:
+RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
 {
-  "numero": "Un número del 1 al 22",
-  "numero_desc": "Breve frase mística sobre este número",
-  "color": "Un color evocador",
-  "color_desc": "Qué energía aporta este color hoy",
-  "momento": "Un rango de 2 horas (ej: 14:00 - 16:00)",
-  "momento_desc": "Por qué es tu momento ideal hoy",
+  "numero": "número entre 1 y 22",
+  "numero_desc": "frase mística",
+  "color": "color",
+  "color_desc": "energía del color",
+  "momento": "rango entre 08:00 y 23:00",
+  "momento_desc": "explicación del momento",
   "elemento": "Agua, Fuego, Tierra o Aire",
-  "elemento_desc": "Cómo fluir con este elemento"
+  "elemento_desc": "frase del elemento",
+  "suerte": "X%",
+  "mision": "tarea de hoy",
+  "alerta": "qué evitar",
+  "palabra": "enfoque"
 }
 `;
 
