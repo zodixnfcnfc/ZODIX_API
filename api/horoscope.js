@@ -411,71 +411,60 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
   return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
 }
     
-    /* ⚡ ENERGÍA (Por defecto) */
-    if (type !== "affinity") {
-      if (person.message_date === today && person.message_daily) {
-        return res.status(200).json({
-          choices: [{ message: { content: person.message_daily } }]
-        });
-      }
+/* ⚡ ENERGÍA (Por defecto) */
+if (type !== "affinity") {
+  if (person.message_date === today && person.message_daily) {
+    return res.status(200).json({
+      choices: [{ message: { content: person.message_daily } }]
+    });
+  }
 
-const prompt = `
-Eres un guía astrológico moderno y minimalista para ZODIX. 
-DATOS DEL USUARIO:
-- NOMBRE: ${person.name}
-- ORIGEN: ${person.birth_place} | HORA: ${person.birth_hour}
-- PERFIL: Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
+  // CALCULO ALEATORIO REAL DESDE EL CÓDIGO
+  const randomPercentage = Math.floor(Math.random() * 100) + 1;
 
-INSTRUCCIONES DE LÓGICA Y ESTILO:
-1. Genera un porcentaje de "Energía Astral" del 1 al 100.
-2. La [Frase de 4 palabras] DEBE estar alineada con ese porcentaje:
-   - 1-30%: Tono de pausa, autocuidado, silencio.
-   - 31-60%: Tono de equilibrio, proceso, espera activa.
-   - 61-85%: Tono de impulso, brillo, avance.
-   - 86-100%: Tono de conquista, poder total, expansión.
-3. Frases cortas y potentes. Sin relleno. Estilo WhatsApp.
-4. Mezcla los datos (${person.sun}, ${person.moon}, ${person.rising}) de forma orgánica.
+  const prompt = `
+Eres un guía astrológico moderno para ZODIX. 
+DATOS: ${person.name}, Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
 
-ESTRUCTURA EXACTA (RESPETA LOS SALTOS DE LÍNEA):
+INSTRUCCIÓN CRÍTICA:
+Hoy el usuario tiene exactamente un ${randomPercentage}% de energía astral.
+Tu frase de 4 palabras DEBE reflejar obligatoriamente este nivel:
+- Si es 1-30%: Frase de introspección/pausa (ej: "Momento de guardar silencio").
+- Si es 31-60%: Frase de equilibrio/espera (ej: "Calma y paso firme").
+- Si es 61-85%: Frase de acción/brillo (ej: "Tu luz hoy brilla").
+- Si es 86-100%: Frase de éxito total (ej: "Cosecha tus grandes triunfos").
 
+ESTRUCTURA:
 Hola, ${person.name},
 Hoy, ${todayFormatted}
 
-Tu energía astral de hoy: [Porcentaje]% - [Frase de 4 palabras que rime con la intensidad del %]
+Tu energía astral de hoy: ${randomPercentage}% - [Frase de 4 palabras según el %]
 
-✨ [Una verdad corta que combine la esencia de su Sol en ${person.sun} con su Luna en ${person.moon}].
-
-🔥 [Acción concreta de menos de 20 palabras que resuene con su Ascendente en ${person.rising}].
-
-📍 [Conexión mágica: Una frase breve que vincule su origen en ${person.birth_place} o su hora (${person.birth_hour}) con su energía actual].
-
+✨ [Verdad corta Sol/Luna].
+🔥 [Acción Ascendente < 20 palabras].
+📍 [Conexión con ${person.birth_place} o ${person.birth_hour}].
 💫 [Cierre de 3 palabras].
 `;
 
-const response = await fetch(
-  "https://api.openai.com/v1/chat/completions",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini", // Nota: Asegúrate de usar un modelo válido como gpt-4o-mini o gpt-3.5-turbo
-      messages: [
-        { 
-          role: "system", 
-          content: "Eres un mentor astrológico experto en brevedad y simbolismo. Tu misión es conectar el porcentaje de energía con el tono del mensaje." 
-        },
-        { 
-          role: "user", 
-          content: prompt 
-        }
-      ],
-      temperature: 0.85 // Temperatura alta para que las frases de 4 palabras varíen cada día
-    })
-  }
-);
+  const response = await fetch(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "Eres un astrólogo directo. No repitas el 70%, usa el porcentaje exacto que te doy." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 1.0 // Máxima variabilidad
+      })
+    }
+  );
+
       const data = await response.json();
       const message = data.choices[0].message.content;
 
