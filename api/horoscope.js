@@ -461,7 +461,7 @@ Tu energía astral de hoy: ${randomPercentage}% - [Frase de 4 palabras]
 
 🔥 [Un conejo claro y accionable de maximo 12 palabras que sea algo que la persona pueda hacer hoy y alineado con el Ascendente ${person.rising}].
 
-📍 [Una conexión simbólica de maximo 12 palabras que sea universal, simbólica y ligeramente misteriosa y que sea inspirada en su ${person.birth_place} o su hora ${person.birth_hour}].
+📍 [Una señal o momento simbólico de maximo 12 palabras que sugiera que algo pequeño o inesperado revelará claridad hoy. Debe sonar personal y concreto, evitando frases abstractas o filosóficas y que sea inspirada sutilmente en su ${person.birth_place} o su hora ${person.birth_hour}].
 
 💫 [Un cierre poderoso de 3 palabras que suene como una firma energética o mantra].
 `;
