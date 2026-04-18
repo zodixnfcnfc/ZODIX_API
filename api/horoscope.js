@@ -434,36 +434,44 @@ if (type !== "affinity") {
 
   // CALCULO ALEATORIO REAL DESDE EL CÓDIGO (Para evitar el sesgo del 70%)
   const randomPercentage = Math.floor(Math.random() * (100 - 35 + 1)) + 35;
-  
+// Mapa de emojis por signo para que sea dinámico
+  const signsEmojis = {
+    "Aries": "♈", "Tauro": "♉", "Géminis": "♊", "Cáncer": "♋", 
+    "Leo": "♌", "Virgo": "♍", "Libra": "♎", "Escorpio": "♏", 
+    "Sagitario": "♐", "Capricornio": "♑", "Acuario": "♒", "Piscis": "♓"
+  };
+  const userSignEmoji = signsEmojis[person.sun] || "✨";
+
   const prompt = `
-Eres un guía astrológico moderno para ZODIX. 
-DATOS: ${person.name}, Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
+Eres un guía astrológico de élite para ZODIX. Tu misión es conectar los puntos de la carta natal de forma mística y directa.
 
-INSTRUCCIÓN DE DISEÑO (CRÍTICA):
-- Español neutro.
-- Tono premium, magico y positivo.
-- Frases neutrales, no genéricas ni repetitivas.
-- Debes dejar una LÍNEA EN BLANCO (doble salto de línea) entre cada sección.
-- No menciones NUNCA el lugar de nacimiento ni la hora.
-- El porcentaje de hoy es exactamente: ${randomPercentage}%.
-- La frase de 4 palabras debe ser coherente con ese ${randomPercentage}%.
-- Usa frases muy cortas y claras (estilo "micro-reading").
-- Máximo impacto emocional con pocas palabras.
+DATOS DEL USUARIO:
+- Nombre: ${person.name}
+- Sol (Identidad): ${person.sun}
+- Luna (Emociones): ${person.moon}
+- Ascendente (Acción): ${person.rising}
+- Origen (Contexto): ${person.birth_place} a las ${person.birth_hour}
 
-ESTRUCTURA EXACTA CON ESPACIOS:
+INSTRUCCIONES DE ESTILO:
+- Tono: Premium, magnético, casi predictivo.
+- Prohibido: Frases genéricas tipo "busca el orden" o "ten paciencia".
+- Estructura: Mantén dobles saltos de línea para que se vea limpio.
+- Sin negritas.
+
+ESTRUCTURA DE RESPUESTA:
 
 Hola, ${person.name},
 Hoy, ${todayFormatted}
 
-Tu energía astral de hoy: ${randomPercentage}% - [Frase de 4 palabras]
+Tu energía astral de hoy: ${randomPercentage}% - [Frase potente de 4 palabras]
 
-✨ [Una verdad breve de maximo 12 palabras que suene como una revelación interior o rasgo poderoso que refleje la combincación del Sol en ${person.sun} con Luna en ${person.moon}].
+${userSignEmoji} [Una revelación sobre cómo su Sol en ${person.sun} debe manejar sus emociones de Luna en ${person.moon} hoy. Máximo 12 palabras].
 
-🔥 [Un conejo claro y accionable de maximo 12 palabras que sea algo que la persona pueda hacer hoy y alineado con el Ascendente ${person.rising}].
+🚀 [Una orden de acción inmediata basada en la fuerza de su Ascendente ${person.rising}. Qué debe hacer físicamente hoy. Máximo 12 palabras].
 
-📍 [Una señal o momento simbólico de maximo 12 palabras que sugiera que algo pequeño o inesperado revelará claridad hoy. Debe sonar personal y concreto, evitando frases abstractas o filosóficas y que sea inspirada sutilmente en su ${person.birth_place} o su hora ${person.birth_hour}].
+🎯 [Una "señal del destino" específica inspirada sutilmente en su origen (${person.birth_place}) o su momento de nacimiento (${person.birth_hour}). Que parezca un secreto solo para ellos. Máximo 12 palabras].
 
-💫 [Un cierre poderoso de 3 palabras que suene como una firma energética o mantra].
+💫 [Mantra de cierre de 3 palabras].
 `;
 
   const response = await fetch(
@@ -479,14 +487,14 @@ Tu energía astral de hoy: ${randomPercentage}% - [Frase de 4 palabras]
         messages: [
           { 
             role: "system", 
-            content: "Eres un mentor astrológico que escribe de forma muy visual. SIEMPRE dejas una línea vacía entre párrafos. No usas negritas." 
+            content: "Eres un mentor astrológico que escribe de forma visual y minimalista. SIEMPRE dejas una línea vacía entre párrafos. No usas negritas." 
           },
           { 
             role: "user", 
             content: prompt 
           }
         ],
-        temperature: 1.0 
+        temperature: 0.85 // Bajamos un poco el 1.0 para que sea coherente pero mantenga la magia
       })
     }
   );
