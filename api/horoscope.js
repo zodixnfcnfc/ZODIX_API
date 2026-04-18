@@ -434,12 +434,14 @@ if (type !== "affinity") {
 
   // CALCULO ALEATORIO REAL DESDE EL CÓDIGO (Para evitar el sesgo del 70%)
   const randomPercentage = Math.floor(Math.random() * (100 - 35 + 1)) + 35;
+  
 // Mapa de emojis por signo para que sea dinámico
   const signsEmojis = {
     "Aries": "♈", "Tauro": "♉", "Géminis": "♊", "Cáncer": "♋", 
     "Leo": "♌", "Virgo": "♍", "Libra": "♎", "Escorpio": "♏", 
     "Sagitario": "♐", "Capricornio": "♑", "Acuario": "♒", "Piscis": "♓"
   };
+  
   const userSignEmoji = signsEmojis[person.sun] || "✨";
 
   const prompt = `
