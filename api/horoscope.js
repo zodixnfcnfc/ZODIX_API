@@ -297,11 +297,11 @@ ESTRUCTURA EXACTA:
 
 Hoy, ${todayFormatted}, conectas especialmente con:
 
-[EMOJI DEL SIGNO] [SIGNO] → frase corta.
+🔥 [SIGNO] → frase corta.
 
-[EMOJI DEL SIGNO] [SIGNO] → frase corta.
+💫 [SIGNO] → frase corta.
 
-[EMOJI DEL SIGNO] [SIGNO] → frase corta.
+⚡ [SIGNO] → frase corta.
 
 ⚠️ Evita hoy:
 
