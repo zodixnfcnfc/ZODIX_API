@@ -183,48 +183,44 @@ const data = await response.json();
       return res.status(200).json({ choices: [{ message: { content: finalMessage } }] });
     }
 
-    /* 🔗 PAIR — GENERAR Y GUARDAR */
-    if (type === "pair") {
-      if (!other) return res.status(400).json({ error: "Missing second UID" });
-      let personB = null;
-      let rowIndexB = -1;
+/* 🔗 PAIR — GENERAR Y GUARDAR */
+if (type === "pair") {
+  if (!other) return res.status(400).json({ error: "Missing second UID" });
+  let personB = null;
+  let rowIndexB = -1;
 
-      for (let i = 1; i < rows.length; i++) {
-        const orderIdB = (rows[i][0] || "").toString().trim();
-        if (orderIdB === other.toString().trim()) {
-          rowIndexB = i + 1;
-          const safeRowB = rows[i].concat(Array(20).fill(""));
-          personB = {
-            name: safeRowB[4] || "",
-            sun: safeRowB[8] || "",
-            moon: safeRowB[9] || "",
-            rising: safeRowB[10] || "",
-            pair_message: safeRowB[17] || "",
-            pair_date: safeRowB[18] || ""
-          };
-          break;
-        }
-      }
+  for (let i = 1; i < rows.length; i++) {
+    const orderIdB = (rows[i][0] || "").toString().trim();
+    if (orderIdB === other.toString().trim()) {
+      rowIndexB = i + 1;
+      const safeRowB = rows[i].concat(Array(20).fill(""));
+      personB = {
+        name: safeRowB[4] || "",
+        sun: safeRowB[8] || "",
+        moon: safeRowB[9] || "",
+        rising: safeRowB[10] || "",
+        pair_message: safeRowB[17] || "",
+        pair_date: safeRowB[18] || ""
+      };
+      break;
+    }
+  }
 
-      if (!personB) return res.status(404).json({ error: "Second person not found" });
+  if (!personB) return res.status(404).json({ error: "Second person not found" });
 
-      const yaExisteConEste = person.pair_message && 
-                             person.pair_date === today && 
-                             person.pair_message.toUpperCase().includes(personB.name.toUpperCase());
+  const yaExisteConEste = person.pair_message && 
+                          person.pair_date === today && 
+                          person.pair_message.toUpperCase().includes(personB.name.toUpperCase());
 
-      if (yaExisteConEste) {
-        return res.status(200).json({ choices: [{ message: { content: person.pair_message } }] });
-      }
+  if (yaExisteConEste) {
+    return res.status(200).json({ choices: [{ message: { content: person.pair_message } }] });
+  }
 
-      const idsOrdenados = [uid, other].sort().join("");
-      const seed = idsOrdenados + today;
-      let hash = 0;
-      for (let i = 0; i < seed.length; i++) {
-        hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const percentage = 30 + Math.abs(hash % 71);
+  // --- SOLUCIÓN AQUÍ: CAMBIAMOS EL HASH POR UN RANDOM REAL ---
+  // Genera un número entero entre 40 y 99 (puedes ajustar el rango)
+  const percentage = Math.floor(Math.random() * (99 - 40 + 1)) + 40;
 
-      const prompt = `
+  const prompt = `
 Genera una afinidad entre dos personas.
 
 FORMATO EXACTO:
@@ -244,42 +240,43 @@ ${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})
 Fecha: ${todayFormatted}
 `;
 
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4.1-mini",
-            max_tokens: 140,
-            temperature: 0.7,
-            messages: [{ role: "user", content: prompt }]
-          })
-        }
-      );
-
-      const data = await response.json();
-      const message = data.choices[0].message.content;
-
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `R${rowIndex}:S${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: { values: [[message, today]] }
-      });
-
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `R${rowIndexB}:S${rowIndexB}`,
-        valueInputOption: "RAW",
-        requestBody: { values: [[message, today]] }
-      });
-
-      return res.status(200).json({ choices: [{ message: { content: message } }] });
+  const response = await fetch(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini", // He corregido a gpt-4o-mini porque tenías 4.1-mini (que no existe)
+        max_tokens: 200,
+        temperature: 1.0, // Subimos temperatura para más variedad
+        messages: [{ role: "user", content: prompt }]
+      })
     }
+  );
+
+  const data = await response.json();
+  const message = data.choices[0].message.content;
+
+  // GUARDAR EN AMBOS (User A y User B)
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: sheetId,
+    range: `R${rowIndex}:S${rowIndex}`,
+    valueInputOption: "RAW",
+    requestBody: { values: [[message, today]] }
+  });
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: sheetId,
+    range: `R${rowIndexB}:S${rowIndexB}`,
+    valueInputOption: "RAW",
+    requestBody: { values: [[message, today]] }
+  });
+
+  return res.status(200).json({ choices: [{ message: { content: message } }] });
+}
 
     /* 💫 AFINIDAD */
 if (type === "affinity") {
