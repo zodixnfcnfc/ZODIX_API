@@ -435,45 +435,30 @@ if (type !== "affinity") {
   // CALCULO ALEATORIO REAL DESDE EL CÓDIGO (Para evitar el sesgo del 70%)
   const randomPercentage = Math.floor(Math.random() * (100 - 35 + 1)) + 35;
   
-// Mapa de emojis por signo para que sea dinámico
-  const signsEmojis = {
-    "Aries": "♈", "Tauro": "♉", "Géminis": "♊", "Cáncer": "♋", 
-    "Leo": "♌", "Virgo": "♍", "Libra": "♎", "Escorpio": "♏", 
-    "Sagitario": "♐", "Capricornio": "♑", "Acuario": "♒", "Piscis": "♓"
-  };
-  
-  const userSignEmoji = signsEmojis[person.sun] || "✨";
+const prompt = `
+Eres un guía astrológico de élite. Crea una lectura diaria para ${person.name}.
+DATOS: Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
+CONTEXTO: Nació en ${person.birth_place} a las ${person.birth_hour}.
 
-  const prompt = `
-Eres un guía astrológico de élite para ZODIX. Tu misión es conectar los puntos de la carta natal de forma mística y directa.
+INSTRUCCIONES DE DISEÑO:
+- Usa el emoji del signo solar del usuario (${person.sun}) para la primera frase.
+- La "señal del destino" (🎯) debe ser una SINCRONICIDAD (ej: un número repetido, un color, un aroma, un pensamiento recurrente), NO un evento físico arriesgado que deba ocurrir fuera.
+- No uses negritas. Deja siempre una línea en blanco entre párrafos.
 
-DATOS DEL USUARIO:
-- Nombre: ${person.name}
-- Sol (Identidad): ${person.sun}
-- Luna (Emociones): ${person.moon}
-- Ascendente (Acción): ${person.rising}
-- Origen (Contexto): ${person.birth_place} a las ${person.birth_hour}
-
-INSTRUCCIONES DE ESTILO:
-- Tono: Premium, magnético, casi predictivo.
-- Prohibido: Frases genéricas tipo "busca el orden" o "ten paciencia".
-- Estructura: Mantén dobles saltos de línea para que se vea limpio.
-- Sin negritas.
-
-ESTRUCTURA DE RESPUESTA:
+ESTRUCTURA:
 
 Hola, ${person.name},
 Hoy, ${todayFormatted}
 
-Tu energía astral de hoy: ${randomPercentage}% - [Frase potente de 4 palabras]
+Tu energía astral de hoy: ${randomPercentage}% - [Frase de 4 palabras]
 
-${userSignEmoji} [Una revelación sobre cómo su Sol en ${person.sun} debe manejar sus emociones de Luna en ${person.moon} hoy. Máximo 12 palabras].
+[Emoji del signo ${person.sun}] [Revelación mística: cómo la esencia de ${person.sun} debe equilibrar la emoción de la Luna en ${person.moon} hoy. Máximo 12 palabras].
 
-🚀 [Una orden de acción inmediata basada en la fuerza de su Ascendente ${person.rising}. Qué debe hacer físicamente hoy. Máximo 12 palabras].
+🚀 [Acción concreta: algo que su Ascendente ${person.rising} le impulsa a ejecutar o cambiar en su entorno hoy. Máximo 12 palabras].
 
-🎯 [Una "señal del destino" específica inspirada sutilmente en su origen (${person.birth_place}) o su momento de nacimiento (${person.birth_hour}). Que parezca un secreto solo para ellos. Máximo 12 palabras].
+🎯 [Sincronicidad: una señal sutil (un reflejo, un número, un patrón) inspirada en la mística de su hora de nacimiento (${person.birth_hour}) que le dará una respuesta. Máximo 12 palabras].
 
-💫 [Mantra de cierre de 3 palabras].
+💫 [Mantra final de 3 palabras].
 `;
 
   const response = await fetch(
@@ -489,14 +474,14 @@ ${userSignEmoji} [Una revelación sobre cómo su Sol en ${person.sun} debe manej
         messages: [
           { 
             role: "system", 
-            content: "Eres un mentor astrológico que escribe de forma visual y minimalista. SIEMPRE dejas una línea vacía entre párrafos. No usas negritas." 
+            content: "Eres un mentor astrológico visual. Tu estilo es minimalista y profundo. Solo usas estos símbolos para los signos: Aries ♈, Tauro ♉, Géminis ♊, Cáncer ♋, Leo ♌, Virgo ♍, Libra ♎, Escorpio ♏, Sagitario ♐, Capricornio ♑, Acuario ♒, Piscis ♓." 
           },
           { 
             role: "user", 
             content: prompt 
           }
         ],
-        temperature: 0.85 // Bajamos un poco el 1.0 para que sea coherente pero mantenga la magia
+        temperature: 0.8
       })
     }
   );
