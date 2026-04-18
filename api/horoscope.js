@@ -435,27 +435,24 @@ if (type !== "affinity") {
   // CALCULO ALEATORIO REAL DESDE EL CÓDIGO (Para evitar el sesgo del 70%)
   const randomPercentage = Math.floor(Math.random() * (100 - 35 + 1)) + 35;
   
-  const prompt = `
-Eres un guía astrológico moderno para ZODIX. 
-DATOS: ${person.name}, Sol en ${person.sun}, Luna en ${person.moon}, Ascendente en ${person.rising}.
+const prompt = `
+Eres un guía astrológico para ZODIX. Escribe un mini horóscopo muy directo.
+DATOS: ${person.name}, Sol: ${person.sun}, Luna: ${person.moon}, Asc: ${person.rising}.
 
-INSTRUCCIÓN DE DISEÑO (CRÍTICA):
-- Debes dejar una LÍNEA EN BLANCO (doble salto de línea) entre cada sección.
-- El porcentaje de hoy es exactamente: ${randomPercentage}%.
-- La frase de 4 palabras debe ser coherente con ese ${randomPercentage}%.
+INSTRUCCIONES:
+- No menciones NUNCA el lugar de nacimiento ni la hora.
+- Usa frases muy cortas y claras (estilo "micro-reading").
+- Deja una línea en blanco entre cada punto.
 
-ESTRUCTURA EXACTA CON ESPACIOS:
-
+ESTRUCTURA:
 Hola, ${person.name},
 Hoy, ${todayFormatted}
 
-Tu energía astral de hoy: ${randomPercentage}% - [Frase de 4 palabras]
+Tu energía: ${randomPercentage}% - [Frase de 3-4 palabras]
 
-✨ [Una verdad corta que combine Sol en ${person.sun} con Luna en ${person.moon}].
+✨ [Una verdad mística de máximo 10 palabras].
 
-🔥 [Acción concreta de menos de 20 palabras para el Ascendente ${person.rising}].
-
-📍 [Conexión mágica con su origen ${person.birth_place} o su hora ${person.birth_hour}].
+🔥 [Consejo de acción de máximo 10 palabras].
 
 💫 [Cierre de 3 palabras].
 `;
@@ -470,16 +467,16 @@ Tu energía astral de hoy: ${randomPercentage}% - [Frase de 4 palabras]
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [
-          { 
-            role: "system", 
-            content: "Eres un mentor astrológico que escribe de forma muy visual. SIEMPRE dejas una línea vacía entre párrafos. No usas negritas." 
-          },
-          { 
-            role: "user", 
-            content: prompt 
-          }
-        ],
+messages: [
+  { 
+    role: "system", 
+    content: "Eres un mentor astrológico minimalista. Escribes frases muy cortas, potentes y visuales. No usas negritas y siempre dejas espacios entre párrafos." 
+  },
+  { 
+    role: "user", 
+    content: prompt 
+  }
+],
         temperature: 1.0 
       })
     }
