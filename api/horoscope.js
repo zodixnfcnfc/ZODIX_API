@@ -424,29 +424,21 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
   return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
 }
     
-/* 🃏 MEME DEL DÍA DESDE GOOGLE DRIVE (GRATIS) */
+/* 🃏 MEME DEL DÍA - LOGICA DE GITHUB */
 if (type === "meme_gen") {
-    const signo = person.sun.toLowerCase(); 
-    
-    // 1. Lógica del día del mes (1 al 31)
-    const diaHoy = new Date().getDate(); // Coge el número del día actual (1-31)
-    
-    // 2. Mapeo de IDs de Google Drive (Aquí el truco)
-    // Como Drive no permite predecir el enlace por nombre, lo mejor es
-    // tener un pequeño objeto con los IDs de las carpetas o usar una lógica de búsqueda.
-    
-    // Si prefieres NO complicarte con IDs, lo más profesional es usar una URL fija 
-    // pero para Drive necesitamos el ID directo de cada foto.
-    
-    // MI CONSEJO: Si vas a usar Drive, crea una pequeña tabla en tu Sheets 
-    // con 31 links para cada signo. Si no, usa un hosting gratuito como PostImages o Imgur
-    // que sí te permite llamar a la imagen por nombre: "aries_1.jpg"
-    
-    const urlMeme = `https://tu-repositorio.com/zodix/${signo}_${diaHoy}.jpg`;
+    const signo = person.sun.toLowerCase(); // Coge el signo: "aries", "leo"...
+    const diaHoy = new Date().getDate();    // Coge el día del mes: 1 al 31
+
+    // SUSTITUYE ESTO:
+    const usuarioGithub = "TU_USUARIO_DE_GITHUB";
+    const repositorio = "ZODIX"; 
+
+    // Esta URL apunta directamente a la imagen cruda en GitHub
+    const urlMeme = `https://raw.githubusercontent.com/${usuarioGithub}/${repositorio}/main/memes/${signo}_${diaHoy}.jpg`;
 
     return res.status(200).json({ 
         url: urlMeme,
-        caption: `Cosas de ${person.sun}...` 
+        caption: `Cosas de ${person.sun} un día ${diaHoy}...` 
     });
 }
     
