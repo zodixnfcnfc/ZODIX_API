@@ -424,23 +424,22 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
   return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
 }
     
-/* 🃏 MEME DEL DÍA - LOGICA DE GITHUB */
-if (type === "meme_gen") {
-    const signo = person.sun.toLowerCase(); // Coge el signo: "aries", "leo"...
-    const diaHoy = new Date().getDate();    // Coge el día del mes: 1 al 31
+/* 🃏 MEME DEL DÍA - SISTEMA GITHUB (GRATIS) */
+    if (type === "meme_gen") {
+      const signo = person.sun.toLowerCase(); // aries, tauro, etc.
+      const diaHoy = new Date().getDate();    // 1 al 31
 
-    // SUSTITUYE ESTO:
-    const usuarioGithub = "TU_USUARIO_DE_GITHUB";
-    const repositorio = "ZODIX"; 
+      // Tu URL de GitHub según la captura que enviaste
+      const usuario = "zodixnfcnfc";
+      const repo = "ZODIX_API";
+      
+      const urlMeme = `https://raw.githubusercontent.com/${usuario}/${repo}/main/api/memes/${signo}_${diaHoy}.jpg`;
 
-    // Esta URL apunta directamente a la imagen cruda en GitHub
-    const urlMeme = `https://raw.githubusercontent.com/${usuarioGithub}/${repositorio}/main/memes/${signo}_${diaHoy}.jpg`;
-
-    return res.status(200).json({ 
+      return res.status(200).json({ 
         url: urlMeme,
-        caption: `Cosas de ${person.sun} un día ${diaHoy}...` 
-    });
-}
+        caption: `Cosas de ${person.sun} hoy...` 
+      });
+    }
     
 /* ⚡ ENERGÍA (Por defecto) */
 if (type !== "affinity") {
