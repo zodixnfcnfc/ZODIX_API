@@ -424,20 +424,25 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
   return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
 }
     
-/* 🃏 MEME DEL DÍA (ESTÁTICO Y GRATIS) */
+/* 🃏 MEME DEL DÍA DESDE GOOGLE DRIVE (GRATIS) */
 if (type === "meme_gen") {
-    const signo = person.sun.toLowerCase(); // aries, leo, etc.
-    const totalMemesPorSigno = 30; // Supongamos que tienes 30
+    const signo = person.sun.toLowerCase(); 
     
-    // Usamos el día del año para que el meme sea el mismo durante todo el día
-    // pero cambie mañana.
-    const diaDelAño = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    // 1. Lógica del día del mes (1 al 31)
+    const diaHoy = new Date().getDate(); // Coge el número del día actual (1-31)
     
-    // Elegimos un número de meme (1 al 30) basado en el día
-    const numeroMeme = (diaDelAño % totalMemesPorSigno) + 1;
+    // 2. Mapeo de IDs de Google Drive (Aquí el truco)
+    // Como Drive no permite predecir el enlace por nombre, lo mejor es
+    // tener un pequeño objeto con los IDs de las carpetas o usar una lógica de búsqueda.
     
-    // Construimos la URL de tu carpeta de imágenes
-    const urlMeme = `https://tu-dominio.com/memes/${signo}_${numeroMeme}.jpg`;
+    // Si prefieres NO complicarte con IDs, lo más profesional es usar una URL fija 
+    // pero para Drive necesitamos el ID directo de cada foto.
+    
+    // MI CONSEJO: Si vas a usar Drive, crea una pequeña tabla en tu Sheets 
+    // con 31 links para cada signo. Si no, usa un hosting gratuito como PostImages o Imgur
+    // que sí te permite llamar a la imagen por nombre: "aries_1.jpg"
+    
+    const urlMeme = `https://tu-repositorio.com/zodix/${signo}_${diaHoy}.jpg`;
 
     return res.status(200).json({ 
         url: urlMeme,
