@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     // 1. AMPLIAMOS EL RANGO A "U" para leer las nuevas columnas
     const sheetData = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: "A:W" 
+      range: "A:Y" 
     });
 
     const rows = sheetData.data.values;
@@ -423,6 +423,70 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
 
   return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
 }
+    
+/* 🃏 GENERACIÓN DE MEME CON IA (DALL-E) */
+    if (type === "meme_gen") {
+      // 1. Ampliamos el objeto person para leer las nuevas columnas X e Y
+      const safeRow = rows[rowIndex - 1].concat(Array(26).fill(""));
+      const memeJsonStr = safeRow[23] || ""; // Columna X
+      const memeDate = safeRow[24] || "";    // Columna Y
+
+      // 2. Si ya se generó un meme hoy, lo devolvemos para ahorrar crédito
+      if (memeDate === today && memeJsonStr) {
+        return res.status(200).json(JSON.parse(memeJsonStr));
+      }
+
+      // 3. Si no existe, pedimos a GPT que cree un "prompt" divertido para DALL-E
+      const promptGptMeme = `Genera un concepto de meme visualmente divertido para ${person.name} que es signo ${person.sun}. 
+      El meme debe tratar sobre un problema típico de su signo (ej: indecisión de Libra, drama de Leo, frialdad de Capricornio) pero con un toque místico. 
+      Responde SOLO con un JSON: {"visual_prompt": "descripción en inglés para DALL-E", "caption": "frase corta en español para el meme"}`;
+
+      const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{ role: "user", content: promptGptMeme }]
+        })
+      });
+
+      const gptData = await gptRes.json();
+      const memeConcept = JSON.parse(gptData.choices[0].message.content.replace(/```json/g, "").replace(/```/g, "").trim());
+
+      // 4. Llamamos a DALL-E 3 para generar la imagen
+      const dallERes = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "dall-e-3",
+          prompt: `A mystical, funny, aesthetic digital art style meme about: ${memeConcept.visual_prompt}. High quality, cinematic lighting, zodiac vibes. No text inside the image.`,
+          n: 1,
+          size: "1024x1024"
+        })
+      });
+
+      const dallEData = await dallERes.json();
+      const finalMeme = {
+        url: dallEData.data[0].url,
+        caption: memeConcept.caption
+      };
+
+      // 5. Guardamos en Sheets (X e Y)
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: sheetId,
+        range: `X${rowIndex}:Y${rowIndex}`,
+        valueInputOption: "RAW",
+        requestBody: { values: [[JSON.stringify(finalMeme), today]] }
+      });
+
+      return res.status(200).json(finalMeme);
+    }
     
 /* ⚡ ENERGÍA (Por defecto) */
 if (type !== "affinity") {
