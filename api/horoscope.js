@@ -82,7 +82,7 @@ person = {
       year: "numeric"
     });
 
-    /* 🔢 NUEVA FUNCIÓN: CÓDIGO DEL DÍA */
+/* 🔢 NUEVA FUNCIÓN: CÓDIGO DEL DÍA */
     if (type === "daily_code") {
       
       // Si ya existe el código de hoy, lo devolvemos parseado
@@ -100,10 +100,10 @@ FECHA: ${todayFormatted}
 SEMILLA DE ALEATORIEDAD: ${Math.random()} 
 
 INSTRUCCIONES DE DISEÑO Y LONGITUD (ESTRICTO):
-1. "mision": Debe ser una tarea rápida y accionable. MÁXIMO 6-10 palabras. (Ej: "Escribe tres ideas nuevas hoy" o "Termina una tarea pendiente").
-2. "alerta": Debe ser una advertencia corta y directa. MÁXIMO 5-7 palabras. (Ej: "Evita decisiones impulsivas" o "Cuidado con gastos innecesarios").
-3. "numero": Número entero único entre 1 y 22.
-4. "suerte": Un porcentaje entre 30% y 99%.
+1. "mision": Debe ser una tarea rápida y accionable. MÁXIMO 6-10 palabras.
+2. "alerta": Debe ser una advertencia corta y directa. MÁXIMO 5-7 palabras.
+3. "fase_lunar": Indica la fase lunar real o astrológicamente relevante para hoy (Nueva, Creciente, Llena o Menguante).
+4. "luna_desc": Una frase muy corta sobre cómo afecta esta luna a la energía de ${person.name}.
 
 RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
 {
@@ -113,8 +113,8 @@ RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
   "color_desc": "energía del color",
   "momento": "rango entre 08:00 y 23:00",
   "momento_desc": "explicación breve",
-  "elemento": "Agua, Fuego, Tierra o Aire",
-  "elemento_desc": "frase corta del elemento",
+  "fase_lunar": "Nombre de la fase lunar",
+  "luna_desc": "influencia lunar corta",
   "suerte": "X%",
   "mision": "tarea rápida de max 10 palabras",
   "alerta": "evitar algo en max 7 palabras",
@@ -131,9 +131,15 @@ const response = await fetch(
       "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini", // Corregido: gpt-4o-mini
-      temperature: 1.0,      // Subimos a 1.0 para que sea mucho más creativo y no repita
-      messages: [{ role: "user", content: promptCode }]
+      model: "gpt-4o-mini",
+      temperature: 1.0,      
+      messages: [
+        { 
+          role: "system", 
+          content: "Eres un oráculo preciso. Generas datos JSON sin texto adicional. Te aseguras de que la fase lunar y su descripción sean coherentes con la fecha actual." 
+        },
+        { role: "user", content: promptCode }
+      ]
     })
   }
 );
@@ -182,7 +188,7 @@ const data = await response.json();
       }
       return res.status(200).json({ choices: [{ message: { content: finalMessage } }] });
     }
-
+    
 /* 🔗 PAIR — GENERAR Y GUARDAR */
 if (type === "pair") {
   if (!other) return res.status(400).json({ error: "Missing second UID" });
