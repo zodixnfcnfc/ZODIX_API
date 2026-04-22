@@ -83,111 +83,120 @@ person = {
     });
 
 /* 🔢 NUEVA FUNCIÓN: CÓDIGO DEL DÍA */
-    if (type === "daily_code") {
-      
-      // Si ya existe el código de hoy, lo devolvemos parseado
-      if (person.code_day === today && person.code_message) {
-        try {
-            return res.status(200).json(JSON.parse(person.code_message));
-        } catch (e) {
-            // Si el JSON guardado diera error, forzamos generación nueva
-        }
-      }
+if (type === "daily_code") {
+  
+  // Si ya existe el código de hoy, lo devolvemos parseado
+  if (person.code_day === today && person.code_message) {
+    try {
+        return res.status(200).json(JSON.parse(person.code_message));
+    } catch (e) {
+        // Si el JSON guardado diera error, forzamos generación nueva
+    }
+  }
 
-const promptCode = `
+  // Creamos una semilla basada en el nombre y la fecha para que sea única pero estable hoy
+  const randomSeed = Math.floor(Math.random() * 1000000);
+
+  const promptCode = `
 Genera el "Código del Día" místico para ${person.name} (Sol: ${person.sun}, Asc: ${person.rising}).
-FECHA: ${todayFormatted}
-SEMILLA DE ALEATORIEDAD: ${Math.random()} 
+FECHA ACTUAL: ${todayFormatted}
+SEMILLA DE VARIACIÓN: ${randomSeed}
 
-INSTRUCCIONES DE DISEÑO Y LONGITUD (ESTRICTO):
-1. "mision": Debe ser una tarea rápida y accionable. MÁXIMO 6-10 palabras.
-2. "alerta": Debe ser una advertencia corta y directa. MÁXIMO 5-7 palabras.
-3. "fase_lunar": Indica la fase lunar real o astrológicamente relevante para hoy (Nueva, Creciente, Llena o Menguante).
-4. "luna_desc": Una frase muy corta sobre cómo afecta esta luna a la energía de ${person.name}.
+INSTRUCCIONES CRÍTICAS DE ALEATORIEDAD:
+- El "numero" DEBE ser elegido al azar entre 1 y 22. Evita tendencias al centro (10-14).
+- El "momento" DEBE variar en todo el rango (ej. 08:15, 14:40, 22:10). No uses siempre las mismas horas.
+- "fase_lunar": Calcula o elige la fase real para hoy (${todayFormatted}). No respondas siempre lo mismo.
+- "mision" y "alerta": Usa verbos y objetos diferentes cada día.
+
+INSTRUCCIONES DE DISEÑO:
+1. "mision": Tarea rápida accionable. MÁXIMO 6-10 palabras.
+2. "alerta": Advertencia corta. MÁXIMO 5-7 palabras.
 
 RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
 {
-  "numero": "número entre 1 y 22",
+  "numero": "número aleatorio entre 1 y 22",
   "numero_desc": "frase mística corta",
   "color": "color",
   "color_desc": "energía del color",
-  "momento": "rango entre 08:00 y 23:00",
+  "momento": "HH:mm (rango 08:00 a 23:00)",
   "momento_desc": "explicación breve",
-  "fase_lunar": "Nombre de la fase lunar",
+  "fase_lunar": "Nueva, Creciente, Llena o Menguante",
   "luna_desc": "influencia lunar corta",
   "suerte": "X%",
-  "mision": "tarea rápida de max 10 palabras",
-  "alerta": "evitar algo en max 7 palabras",
+  "mision": "máximo 10 palabras",
+  "alerta": "máximo 7 palabras",
   "palabra": "una sola palabra"
 }
 `;
 
-const response = await fetch(
-  "https://api.openai.com/v1/chat/completions",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      temperature: 1.0,      
-      messages: [
-        { 
-          role: "system", 
-          content: "Eres un oráculo preciso. Generas datos JSON sin texto adicional. Te aseguras de que la fase lunar y su descripción sean coherentes con la fecha actual." 
-        },
-        { role: "user", content: promptCode }
-      ]
-    })
-  }
-);
-
-const data = await response.json();
-      let codeDataText = data.choices[0].message.content;
-
-      // 1. LIMPIEZA: Quitamos las comillas triple (```json) que pone OpenAI
-      codeDataText = codeDataText.replace(/```json/g, "").replace(/```/g, "").trim();
-      
-      // 2. PARSEO: Convertimos el texto en un objeto real de JS
-      const finalJson = JSON.parse(codeDataText);
-
-      // 3. GUARDAR: Guardamos en Sheets el texto ya limpio
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `T${rowIndex}:U${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[JSON.stringify(finalJson), today]]
-        }
-      });
-
-      // 4. RESPONDER: Enviamos el JSON limpio a Shopify
-      return res.status(200).json(finalJson);
-     }
-
-    /* 🔮 READPAIR — SOLO LECTURA */
-    if (type === "readpair") {
-      let finalMessage = "No hay conexión guardada.";
-      if (person.pair_date === today && person.pair_message) {
-        finalMessage = person.pair_message;
-      } 
-      else if (other) {
-        for (let i = 1; i < rows.length; i++) {
-          const orderIdB = (rows[i][0] || "").toString().trim();
-          if (orderIdB === other.toString().trim()) {
-            const dateB = rows[i][18] || "";
-            const msgB = rows[i][17] || "";
-            if (dateB === today) {
-              finalMessage = msgB;
-            }
-            break;
-          }
-        }
-      }
-      return res.status(200).json({ choices: [{ message: { content: finalMessage } }] });
+  const response = await fetch(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        temperature: 1.0, 
+        presence_penalty: 0.6, // Penaliza la repetición de temas
+        frequency_penalty: 0.3, // Penaliza la repetición de palabras exactas
+        messages: [
+          { 
+            role: "system", 
+            content: "Eres un oráculo místico que nunca se repite. Tu misión es ofrecer una lectura única y sorprendente cada día, variando los números, las horas y los consejos. El JSON debe ser estricto." 
+          },
+          { role: "user", content: promptCode }
+        ]
+      })
     }
+  );
+
+  const data = await response.json();
+  let codeDataText = data.choices[0].message.content;
+
+  // 1. LIMPIEZA
+  codeDataText = codeDataText.replace(/```json/g, "").replace(/```/g, "").trim();
+  
+  // 2. PARSEO
+  const finalJson = JSON.parse(codeDataText);
+
+  // 3. GUARDAR
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: sheetId,
+    range: `T${rowIndex}:U${rowIndex}`,
+    valueInputOption: "RAW",
+    requestBody: {
+      values: [[JSON.stringify(finalJson), today]]
+    }
+  });
+
+  // 4. RESPONDER
+  return res.status(200).json(finalJson);
+}
+
+/* 🔮 READPAIR — SOLO LECTURA */
+if (type === "readpair") {
+  let finalMessage = "No hay conexión guardada.";
+  if (person.pair_date === today && person.pair_message) {
+    finalMessage = person.pair_message;
+  } 
+  else if (other) {
+    for (let i = 1; i < rows.length; i++) {
+      const orderIdB = (rows[i][0] || "").toString().trim();
+      if (orderIdB === other.toString().trim()) {
+        const dateB = rows[i][18] || "";
+        const msgB = rows[i][17] || "";
+        if (dateB === today) {
+          finalMessage = msgB;
+        }
+        break;
+      }
+    }
+  }
+  return res.status(200).json({ choices: [{ message: { content: finalMessage } }] });
+}
     
 /* 🔗 PAIR — GENERAR Y GUARDAR */
 if (type === "pair") {
