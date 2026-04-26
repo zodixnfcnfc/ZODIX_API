@@ -305,31 +305,27 @@ if (type === "affinity") {
 Genera una afinidad diaria basada en los DATOS ASTRALES:
 Sol: ${person.sun}, Luna: ${person.moon}, Ascendente: ${person.rising}.
 
-INSTRUCCIONES DE FORMATO (OBLIGATORIO):
-Debes usar DOBLE SALTO DE LÍNEA entre cada sección para que el texto sea muy visual y espaciado.
+INSTRUCCIONES DE FORMATO:
+- Usa un UNICO salto de línea entre cada sección.
+- El texto debe ser limpio y visual.
 
 ESTRUCTURA EXACTA:
-
 Hoy, ${todayFormatted}, conectas especialmente con:
 
 🔥 [SIGNO] → frase corta.
-
 💫 [SIGNO] → frase corta.
-
 ⚡ [SIGNO] → frase corta.
 
 ⚠️ Evita hoy:
-
-[EMOJI DEL SIGNO] [NOMBRE DEL SIGNO] → advertencia breve.
+[EMOJI] [SIGNO] → advertencia breve.
 
 💡 Consejo:
-
-[Frase final de consejo en su propia línea]
+[Frase de consejo]
 
 ---
-REGLAS CRÍTICAS:
-1. Deja una línea totalmente vacía entre CADA signo.
-2. Deja una línea vacía después de "Evita hoy:" y después de "Consejo:".
+REGLAS:
+1. No uses negritas ni Markdown.
+2. Varía los signos.
 3. Varía los signos, no repitas siempre los mismos de fuego.
 4. PROHIBICIÓN ABSOLUTA: El signo que aparece en "Evita hoy" NO PUEDE ser ninguno de los tres signos con los que se conecta especialmente. Deben ser signos diferentes.
 `;
