@@ -105,7 +105,7 @@ SEMILLA DE VARIACIÓN: ${randomSeed}
 INSTRUCCIONES CRÍTICAS DE ALEATORIEDAD:
 - El "numero" DEBE ser elegido al azar entre 1 y 22. Evita tendencias al centro (10-14).
 - El "momento" DEBE variar en todo el rango (ej. 08:15, 14:40, 22:10). No uses siempre las mismas horas.
-- "fase_lunar": Calcula o elige la fase real para hoy (${todayFormatted}). No respondas siempre lo mismo.
+- "fase_lunar": Identifica la fase exacta para hoy basándote en la fecha: ${todayFormatted}. El valor de "fase_lunar" DEBE ser exclusivamente uno de estos 8 términos: "Luna Nueva", "Creciente", "Cuarto Creciente", "Gibosa Creciente", "Luna Llena", "Gibosa Menguante", "Cuarto Menguante" o "Menguante". No uses otros términos.
 - "mision" y "alerta": Usa verbos y objetos diferentes cada día.
 
 INSTRUCCIONES DE DISEÑO:
@@ -120,8 +120,8 @@ RESPONDE ÚNICAMENTE EN FORMATO JSON PURO:
   "color_desc": "energía del color",
   "momento": "HH:mm (rango 08:00 a 23:00)",
   "momento_desc": "explicación breve",
-  "fase_lunar": "Nueva, Creciente, Llena o Menguante",
-  "luna_desc": "influencia lunar corta",
+  "fase_lunar": "Elegir uno de los 8 términos exactos",
+  "luna_desc": "Breve explicación de la influencia de esta fase específica",
   "suerte": "X%",
   "mision": "máximo 10 palabras",
   "alerta": "máximo 7 palabras",
