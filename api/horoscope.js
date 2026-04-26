@@ -317,9 +317,11 @@ Hoy, ${todayFormatted}, conectas especialmente con:
 ⚡ [SIGNO] → frase corta.
 
 ⚠️ Evita hoy:
+
 [EMOJI] [SIGNO] → advertencia breve.
 
 💡 Consejo:
+
 [Frase de consejo]
 
 ---
