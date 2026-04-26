@@ -345,7 +345,7 @@ REGLAS:
         messages: [
           { 
             role: "system", 
-            content: "Eres un astrólogo experto. Tu prioridad absoluta es el FORMATO VISUAL. Debes separar cada párrafo y cada signo con una línea en blanco obligatoriamente." 
+            content: "Eres un astrólogo experto en formato limpio. Escribe de forma directa, usando solo un salto de línea para separar bloques de texto. No uses negritas." 
           }, 
           { role: "user", content: promptAffinity }
         ]
