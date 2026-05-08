@@ -437,16 +437,16 @@ Hoy, ${todayFormatted}, las estrellas revelan una vibración especial para ti.
   return res.status(200).json({ choices: [{ message: { content: messageLong } }] });
 }
     
-/* 🃏 MEME DEL DÍA - SISTEMA GITHUB (GRATIS) */
+/* 🃏 MEME DEL DÍA - SISTEMA GITHUB */
     if (type === "meme_gen") {
-      const signo = person.sun.toLowerCase(); // aries, tauro, etc.
-      const diaHoy = new Date().getDate();    // 1 al 31
+      const signo = person.sun.toLowerCase(); 
+      const diaHoy = new Date().getDate();    
 
-      // Tu URL de GitHub según la captura que enviaste
       const usuario = "zodixnfcnfc";
       const repo = "ZODIX_API";
       
-      const urlMeme = `https://raw.githubusercontent.com/${usuario}/${repo}/main/api/memes/${signo}_${diaHoy}.jpg`;
+      // He puesto .JPG en mayúsculas porque así sale en tu foto de GitHub
+      const urlMeme = `https://raw.githubusercontent.com/${usuario}/${repo}/main/api/memes/${signo}_${diaHoy}.JPG`;
 
       return res.status(200).json({ 
         url: urlMeme,
