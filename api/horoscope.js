@@ -247,6 +247,7 @@ ${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})
 
 
 
+
 🔗 Conexión energética hoy: ${percentage}%
 
 
