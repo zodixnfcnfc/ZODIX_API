@@ -240,9 +240,11 @@ Genera una afinidad entre dos personas.
 
 FORMATO EXACTO:
 ✨ Afinidad Detectada
+
 ${person.name.toUpperCase()} (${person.sun.toUpperCase()})
 +
 ${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})
+
 
 🔗 Conexión energética hoy: ${percentage}%
 
