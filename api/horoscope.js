@@ -246,7 +246,10 @@ ${person.name.toUpperCase()} (${person.sun.toUpperCase()})
 ${personB.name.toUpperCase()} (${personB.sun.toUpperCase()})
 
 
+
 🔗 Conexión energética hoy: ${percentage}%
+
+
 
 ✨ Frase corta positiva.
 
